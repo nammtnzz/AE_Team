@@ -1,0 +1,136 @@
+{
+  "name": "p0-team",
+  "displayName": "AE_CodexTeam",
+  "description": "AE_CodexTeam: 9 vai trò tiếng Việt, model Claude/Codex, tạo ảnh iw-imagegen và QA tiếp nhận ý kiến.",
+  "version": "1.0.1",
+  "publisher": "inwave-local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "main": "./dist/extension.bundle.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "aeTeam.open",
+        "title": "AE_CodexTeam: Mở bảng điều phối",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "aeTeam.configure",
+        "title": "AE_CodexTeam: Cấu hình gateway & model"
+      },
+      {
+        "command": "aeTeam.setApiKey",
+        "title": "AE_CodexTeam: Lưu API key"
+      },
+      {
+        "command": "aeTeam.afterEffects",
+        "title": "AE_CodexTeam: Công cụ After Effects",
+        "icon": "$(tools)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aeTeam",
+          "title": "AE_CodexTeam",
+          "icon": "media/team.svg"
+        }
+      ]
+    },
+    "views": {
+      "aeTeam": [
+        {
+          "id": "aeTeam.launcher",
+          "name": "Team của bạn"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AE_CodexTeam",
+      "properties": {
+        "aeTeam.autoOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mở bảng khi workspace có .ae-team/team.json."
+        },
+        "aeTeam.claudePath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "description": "Đường dẫn Claude Code CLI chính thức. Để trống để tự tìm bản đi kèm extension Claude Code."
+        },
+        "aeTeam.imageScript": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "description": "Đường dẫn scripts/image_gen.py của skill iw-imagegen. Để trống để tự tìm trong ~/.claude/skills/iw-imagegen."
+        },
+        "aeTeam.pythonPath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "python",
+          "description": "Python dùng để chạy skill iw-imagegen."
+        },
+        "aeTeam.enginePath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "description": "Engine AE_CodexTeam. Để trống để tự tìm bản đã cài, engine tích hợp trong AE_CodexTeam."
+        },
+        "aeTeam.nodePath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "node",
+          "description": "Node.js dùng để khởi động MCP AE_Codex."
+        },
+        "aeTeam.pwshPath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "description": "PowerShell 7 của AE_Codex; để trống để tự tìm runtime local hoặc pwsh."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p . && esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.bundle.js && esbuild src/work-status.ts --bundle --platform=browser --format=iife --global-name=AETeamWork --minify --outfile=media/work-status.js && esbuild src/office.ts --bundle --platform=browser --format=iife --minify --legal-comments=eof --outfile=media/office.js",
+    "watch": "tsc -watch -p .",
+    "check": "tsc --noEmit",
+    "test": "npm run compile && node --test test/*.test.cjs",
+    "package": "npm run compile && vsce package --no-dependencies --out ae-codexteam-1.0.1.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/three": "^0.186.0",
+    "@types/vscode": "^1.100.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.28.2",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "ajv": "^8.20.0",
+    "smol-toml": "1.9.1",
+    "three": "^0.186.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nammtnzz/AE_CodexTeam.git"
+  },
+  "homepage": "https://github.com/nammtnzz/AE_CodexTeam"
+}

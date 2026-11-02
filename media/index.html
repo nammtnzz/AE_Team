@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{CSP}} data:; style-src {{CSP}}; script-src {{CSP}};">
+  <link rel="stylesheet" href="{{CSS}}">
+  <link rel="stylesheet" href="{{VIEWS_CSS}}">
+  <title>AE_CodexTeam</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">A<span>E</span></span><div><strong>AE_CodexTeam</strong><small>AFTER EFFECTS · MODEL TEAM</small></div></div>
+    <div class="workspace-pill"><span class="dot"></span><span id="workspace">Workspace</span></div>
+    <div class="top-actions"><button id="focusBtn" class="quiet">⛶ <span>Tập trung</span></button><button id="configBtn">⚙ <span>Proxy & model</span></button><button id="demoBtn" class="demo-button">▷ Chạy demo</button></div>
+  </header>
+  <main>
+    <section class="workspace-heading">
+      <div><div class="eyebrow">WORKSPACE / AFTER EFFECTS PRODUCTION</div><h1 id="teamName">After Effects Production<span class="small-tag">9 VAI TRÒ</span></h1><p>Một team. Nhiều chuyên môn. Cùng hoàn thành công việc.</p></div>
+      <div class="connection"><span id="connectionDot" class="dot warning"></span><span id="connectionLabel">Chưa cấu hình gateway</span><button id="newBtn" class="new-button">＋ Phiên mới</button></div>
+    </section>
+    <section class="ae-strip"><span class="ae-logo">Ae</span><div><strong>AE_CodexTeam</strong><small id="aeStripStatus">Bảng việc, model và công cụ AE trong một nơi</small></div><button id="aeOpenBtn">Công cụ After Effects ↗</button></section>
+    <section class="brief-panel" id="briefPanel">
+      <div class="brief-label"><span class="section-number">01</span><div><strong>CEO → PO · Giao việc</strong><small>Mô tả mục tiêu, team sẽ chia thành các bước thực hiện.</small></div></div>
+      <div class="brief-input"><textarea id="brief" rows="2" placeholder="Ví dụ: Tạo motion poster 10 giây, 1080 × 1920, chữ chuyển động, camera và glow nhẹ; dùng asset đang có…"></textarea><button id="createBtn" class="primary">Tạo phiên <span>↗</span></button></div>
+    </section>
+    <section class="team-section">
+      <div class="section-header"><div><span class="section-number">02</span><h2>Team / model</h2><span id="roleCount" class="muted">9 vị trí</span></div><span id="modelSummary" class="tiny">2 OPUS · 3 SONNET · 2 GPT · 1 HAIKU | IMAGE TOOL</span></div>
+      <div id="roles" class="roles"></div>
+    </section>
+    <section class="work-section">
+      <div class="board-toolbar">
+        <nav id="tabs" class="tabs" aria-label="Chế độ xem">
+          <button data-tab="office">◈ Office 3D</button><button data-tab="board" class="selected">▦ Bảng việc</button><button data-tab="results">▤ Kết quả</button><button data-tab="timeline">◷ Timeline</button><button data-tab="workflow">⇢ Luồng việc</button><button data-tab="stats">▥ Thống kê</button><button data-tab="ae">Ae After Effects</button>
+        </nav>
+        <div class="session-actions"><select id="sessionSelect" aria-label="Chọn phiên"><option>Chưa có phiên</option></select><button id="exportBtn" class="quiet" title="Xuất phiên">↥ Xuất</button><button id="deleteSessionBtn" class="quiet" title="Xóa tất cả yêu cầu cũ">🗑 Xóa tất cả yêu cầu</button></div>
+      </div>
+      <div class="runbar"><div><span id="sessionState" class="state-badge">SẴN SÀNG</span><span id="sessionTitle" class="muted">Tạo phiên mới để giao việc cho team</span></div><div><button id="qaBtn">QA · Câu hỏi & góp ý</button><button id="imageBtn" class="quiet">✧ Tạo ảnh</button><button id="pauseBtn" disabled>Ⅱ Tạm dừng</button><button id="runBtn" class="primary" disabled>▷ Bắt đầu</button></div></div>
+      <div id="demoNotice" class="demo-notice" hidden>DỮ LIỆU DEMO · Chỉ minh họa giao diện. Không gọi API, không sửa file và chưa kiểm thử After Effects.</div>
+      <div id="officeView" class="view" hidden>
+        <div class="view-heading"><div><div class="eyebrow">YOUR AI PRODUCTION OFFICE</div><h2>Office 3D</h2><p>Điều phối ở đầu phòng · 6 chuyên gia trong hai dãy bàn · Cùng một studio AE.</p></div><span id="officeSummary" class="view-count"></span></div>
+        <div class="office-layout"><section class="office-scene"><div class="office-scene-bar"><span>AE TEAM / PRODUCTION FLOOR</span><div><button id="officeMotionBtn" hidden aria-pressed="false">▷ Xem chuyển động</button><button data-action="officeCamera" data-id="iso">Góc 3/4</button><button data-action="officeCamera" data-id="top">Từ trên</button><button data-action="officeCamera" data-id="front">Chính diện</button><button data-action="officeReset" title="Khởi tạo lại cảnh và góc nhìn">↻</button></div></div><div id="officeCanvas" class="office-canvas"><div id="officeGpuNotice" class="office-message">Đang khởi tạo văn phòng 3D…</div></div><div class="office-scene-footer"><span>Kéo: xoay · Cuộn: zoom · Bấm: chọn vai trò</span><span id="officeMotionHint">Chuyển động theo task đang chạy</span></div></section><aside class="office-sidebar"><div class="section-header"><h3 id="officeRoleCount">Team / 9 vị trí</h3><span class="tiny">CHỌN VAI TRÒ</span></div><div id="officeRoster"></div><div id="officeRoleDetail"></div></aside></div>
+        <div class="office-legend"><span class="status-chip status-assigned">Sẵn sàng / được giao</span><span class="status-chip status-running">Đang làm</span><span class="status-chip status-review">Chờ review</span><span class="status-chip status-approved">Đã duyệt</span><span class="status-chip status-blocked">Cần xử lý</span><small>Cảnh 3D thể hiện trạng thái team; không tự thực thi lệnh AE.</small></div>
+      </div>
+      <div id="boardView" class="view board"></div>
+      <div id="aeView" class="view" hidden>
+        <div class="ae-header"><div><div class="eyebrow">CODEX AE ENGINE</div><h2>After Effects workspace</h2><p id="aeConnection">Chưa kiểm tra kết nối</p><small id="aeEnginePath"></small></div><div class="ae-actions"><button id="aePickEngine">Chọn engine</button><button id="aeRefresh">↻ Kiểm tra kết nối</button><button id="aeProject">Đọc project</button><button id="aeOpenProject">Mở project…</button><button id="aeSaveProject">Lưu project…</button><button id="aeCachedProject">Bản đọc đã lưu</button><button id="aeInventory">Thư viện đã lưu</button></div></div>
+        <div id="aeHold" class="ae-warning" hidden><strong>Kết quả lệnh trước chưa được xác nhận.</strong><p>Kiểm tra project, kết quả trong AE_Codex và bảo đảm job cũ đã dừng. Các bước trước lỗi có thể đã áp dụng.</p><button id="aeResolve">Tôi đã kiểm tra trạng thái AE…</button></div>
+        <form id="aeSfxForm" class="ae-search"><input id="aeSfxQuery" placeholder="Tìm SFX đã lưu: whoosh, impact, ambience…" aria-label="Tìm SFX"><button type="submit">Tìm âm thanh SFX</button></form><div class="ae-grid"><section class="ae-tools"><div class="section-header"><h3>Công cụ đã cài</h3><span id="aeCount" class="muted"></span></div><form id="aeSearchForm" class="ae-search"><input id="aeQuery" placeholder="Tìm comp, layer, keyframe, effect…" aria-label="Tìm công cụ AE"><button type="submit">Tìm</button></form><div id="aeToolsList" class="ae-tool-list"><p class="muted">Bấm Kiểm tra kết nối để đọc danh mục.</p></div><details id="aeSchemaWrap" hidden open><summary>Tham số & yêu cầu</summary><pre id="aeSchema"></pre></details></section>
+        <section class="ae-plan-editor"><h3>JSON plan</h3><p class="muted">Dùng function đã cài. Kiểm tra schema, xem lại rồi thực thi.</p><input id="aePlanTitle" placeholder="Tên plan" aria-label="Tên plan"><textarea id="aePlanJson" rows="13" spellcheck="false" aria-label="JSON plan">{
+  "schema": "aect-functions/v1",
+  "steps": [
+    { "function": "team.project.inspect", "args": {} }
+  ]
+}</textarea><div class="ae-actions"><button id="aeStage" class="primary">Kiểm tra & đưa vào hàng chờ</button><button id="aeOpenEngine">Mở thư mục engine</button></div><p class="stats-note">Một lệnh AE tại một thời điểm. Dừng ở lỗi đầu tiên; không tự chạy lại sau lỗi/timeout. Kết nối/Stop và cập nhật thư viện nằm trong panel ScriptUI tương thích. Plugin native chờ SDK.</p></section></div>
+        <section class="ae-queue"><div class="section-header"><h3>Hàng chờ duyệt & lịch sử thực thi</h3><span class="muted">Plan của tất cả phiên trong workspace</span></div><div id="aePlans"></div></section>
+        <section class="ae-queue"><div class="section-header"><h3>Hàng chờ MCP</h3><span class="muted">Tool MCP có thể ghi/sửa · duyệt từng lệnh, không tự chạy lại</span></div><p id="mcpHold" class="task-error" hidden>Lệnh MCP trước chưa rõ kết quả. Kiểm tra ở hệ thống đích rồi bấm <button id="mcpResolve">Đã kiểm tra</button></p><div id="mcpPlans"></div></section>
+        <details class="ae-output"><summary>Kết quả đọc project / thư viện</summary><pre id="aeLastRead">Chưa đọc dữ liệu AE.</pre></details>
+      </div>
+      <div id="resultsView" class="view" hidden></div>
+      <div id="timelineView" class="view" hidden></div>
+      <div id="workflowView" class="view" hidden></div>
+      <div id="statsView" class="view" hidden></div>
+      <footer><span><span class="dot"></span> <span id="footerStatus">Team đã sẵn sàng</span></span><span>Đề xuất plan → duyệt → thực thi AE → kiểm tra kết quả</span></footer>
+    </section>
+  </main>
+  <aside id="detail" class="detail" hidden aria-label="Hội thoại và công việc của thành viên"></aside>
+  <div id="overlay" class="overlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="configTitle">
+      <div class="modal-header"><div><div class="eyebrow">TEAM SETTINGS</div><h2 id="configTitle">Proxy & model</h2></div><button id="closeConfig" class="icon-button" aria-label="Đóng">×</button></div>
+      <p class="modal-description">Kết nối gateway của bạn và chọn model cho từng chuyên môn.</p>
+      <div class="settings-grid">
+        <label>OpenAI Base URL<input id="openaiUrl" type="url" placeholder="https://gateway-cua-ban/v1"><small>Responses / Chat Completions</small></label>
+        <label>Anthropic Base URL<input id="anthropicUrl" type="url" placeholder="https://gateway-cua-ban/v1"><small>Messages API · cần client được gateway hỗ trợ</small></label>
+      </div>
+      <div class="key-row"><span id="keyState">API key chưa được lưu</span><button id="keyBtn">⌑ Lưu API key</button><button id="localBtn">Nạp IW local</button><button id="testBtn">Kiểm tra /models</button></div>
+      <div class="settings-grid compact"><label>Tác vụ song song<input id="parallel" type="number" min="1" max="9"></label><label>Giới hạn output / request<input id="maxTokens" type="number" min="256" max="16384" step="256"></label></div>
+      <div class="settings-grid compact"><label>Ngân sách lượt gọi / phiên<input id="budgetCalls" type="number" min="0" step="1"><small>0 = không giới hạn · tạm dừng trước lượt vượt</small></label><label>Ngân sách token / phiên<input id="budgetTokens" type="number" min="0" step="1000"><small>Token do API báo · 0 = không giới hạn</small></label></div>
+      <label class="settings-prices">Bảng giá (USD / 1M token, tùy chọn)<textarea id="prices" rows="3" spellcheck="false" placeholder='{ "claude-opus-5-5": { "input": 15, "output": 75 } }'></textarea><small>Chỉ dùng để ước tính trong Thống kê; nhập đúng giá gateway của bạn. Không có giá thì không ước tính.</small></label>
+      <div id="roleSettings" class="role-settings"></div>
+      <p class="settings-note">Claude: dùng CLI chính thức để tương thích gateway IW. GPT: chọn Responses. Model ảnh chạy qua iw-imagegen. API key được giữ riêng trong VS Code SecretStorage.</p>
+      <section class="toolbox-settings"><div class="toolbox-head"><div><strong>Skill & MCP từ Codex / Claude</strong><small id="toolboxSummary">Chưa quét</small></div><button id="toolboxScan">Quét</button></div>
+        <div id="toolboxList"></div>
+        <small>Chỉ quét khi bấm. Skill là tài liệu chỉ đọc. Server MCP mặc định tắt; bật từng server bạn tin dùng. Tool chỉ đọc chạy ngay, tool ghi/sửa vào Hàng chờ MCP để duyệt. Server AE_Codex bị bỏ qua vì AE dùng engine riêng. Token/header không được lưu hay gửi cho model.</small></section>
+      <div id="modelList" class="model-list" hidden></div>
+      <div class="modal-footer"><span>Lưu tại .ae-team/team.json · không chứa API key</span><button id="saveConfig" class="primary">Lưu cấu hình</button></div>
+    </section>
+  </div>
+  <div id="imageOverlay" class="overlay" hidden><section class="modal image-modal" role="dialog" aria-modal="true" aria-labelledby="imageTitle"><div class="modal-header"><div><div class="eyebrow">VAI TRÒ TẠO ẢNH · CODEX SKILL</div><h2 id="imageTitle">Tạo asset với IW ImageGen</h2></div><button id="closeImage" class="icon-button" aria-label="Đóng">×</button></div><p class="modal-description">Model: gpt-image-2.5-sunburst · 1024 × 1024 · Lưu trong .ae-team/assets</p><label>Prompt ảnh<textarea id="imagePrompt" rows="7" placeholder="Mô tả asset, phong cách, màu sắc, góc nhìn và các ràng buộc…"></textarea></label><p class="settings-note">Chạy scripts/image_gen.py của skill iw-imagegen với cấu hình local. Thao tác này gửi prompt tới API ảnh và có thể phát sinh phí.</p><div class="modal-footer"><button id="imageStop">Dừng tạo ảnh</button><span id="imageStatus"></span><button id="generateImage" class="primary">✧ Tạo ảnh</button></div></section></div>
+  <div id="toast" class="toast" hidden role="status"></div>
+  <div id="qaOverlay" class="overlay" hidden><section class="modal qa-modal" role="dialog" aria-modal="true" aria-labelledby="qaTitle"><div class="modal-header"><div><div class="eyebrow">CÂU HỎI & GÓP Ý</div><h2 id="qaTitle">QA tiếp nhận ý kiến</h2></div><button id="closeQa" class="icon-button" aria-label="Đóng">×</button></div><p id="qaStatus" class="modal-description"></p><div id="qaMessages" class="qa-messages" role="log" aria-live="polite"></div><form id="qaForm"><label>Câu hỏi hoặc góp ý<textarea id="qaInput" rows="3" maxlength="10000" required placeholder="Hỏi QA hoặc ghi ý kiến bạn muốn team tiếp nhận…"></textarea></label><div class="modal-footer"><button id="qaStop" type="button">Dừng QA</button><button id="qaSend" type="submit" class="primary">Gửi cho QA</button></div></form></section></div>
+  <script src="{{VIEWS}}"></script>
+  <script src="{{WORK_STATUS}}"></script>
+  <script src="{{OFFICE}}"></script>
+  <script src="{{JS}}"></script>
+</body>
+</html>

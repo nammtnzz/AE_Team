@@ -1,0 +1,4449 @@
+{
+  "schema": "aect-functions-catalog/v1",
+  "bridgeVersion": "1.0.0",
+  "revision": "f3ac1f6b8dbf77ef3b1847699411c58f3257b5209f1467d56d307252dd8cda24",
+  "functions": [
+    {
+      "name": "team.system.info",
+      "description": "Read host version and connection context",
+      "mutates": false,
+      "args": {},
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.app.memory",
+      "description": "Inspect native AE memory use, configure its memory percentages, or release image cache without clearing Undo or disk cache; never changes project data",
+      "mutates": true,
+      "args": {
+        "operation": "optional inspect (default), configure or purgeImages",
+        "imageCachePercentage": "configure only: required finite percentage 0..100 for the image cache",
+        "maximumMemoryPercentage": "configure only: required finite percentage 0..100 for maximum usable memory; not a hard process byte cap"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "inspect",
+              "configure",
+              "purgeImages"
+            ],
+            "default": "inspect",
+            "description": "Inspect memory by default; configure application percentages or release only cached image data when explicitly requested"
+          },
+          "imageCachePercentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Native AE percentage; required only for configure, with no supported readback or hard byte-limit guarantee"
+          },
+          "maximumMemoryPercentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Native AE percentage; required only for configure, with no supported readback or hard byte-limit guarantee"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "inspect"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "configure"
+                ]
+              },
+              "imageCachePercentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Native AE percentage; required only for configure, with no supported readback or hard byte-limit guarantee"
+              },
+              "maximumMemoryPercentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Native AE percentage; required only for configure, with no supported readback or hard byte-limit guarantee"
+              }
+            },
+            "required": [
+              "operation",
+              "imageCachePercentage",
+              "maximumMemoryPercentage"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "purgeImages"
+                ]
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": true
+    },
+    {
+      "name": "team.tools.list",
+      "description": "List reusable installed tools; archived scripts require explicit includeLegacy:true",
+      "mutates": false,
+      "args": {
+        "includeLegacy": "optional boolean; default false, archive maintenance only"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "includeLegacy": {
+            "type": "boolean",
+            "description": "optional boolean; default false, archive maintenance only"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.project.inspect",
+      "description": "Read project items without changing the project",
+      "mutates": false,
+      "args": {
+        "maxItems": "optional integer 1..5000; default 100"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "maxItems": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional integer 1..5000; default 100"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.inspect",
+      "description": "Read composition settings and layers",
+      "mutates": false,
+      "args": {
+        "comp": "optional comp selector",
+        "includeLayers": "optional boolean; default true",
+        "maxLayers": "optional integer 1..5000; default 200"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "includeLayers": {
+            "type": "boolean",
+            "description": "optional boolean; default true"
+          },
+          "maxLayers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional integer 1..5000; default 200"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.create",
+      "description": "Create a composition; optionally label it with step.as",
+      "mutates": true,
+      "args": {
+        "name": "composition name",
+        "width": "optional integer 4..30000; default 1920",
+        "height": "optional integer 4..30000; default 1080",
+        "pixelAspect": "optional number; default 1",
+        "duration": "optional seconds; default 10",
+        "frameRate": "optional frames/second; default 30",
+        "bgColor": "optional RGB [0..1,0..1,0..1]",
+        "workAreaStart": "optional seconds",
+        "workAreaDuration": "optional seconds",
+        "displayStartTime": "optional seconds"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "composition name"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 30000,
+            "description": "optional integer 4..30000; default 1920"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 30000,
+            "description": "optional integer 4..30000; default 1080"
+          },
+          "pixelAspect": {
+            "type": "number",
+            "description": "optional number; default 1"
+          },
+          "duration": {
+            "type": "number",
+            "description": "optional seconds; default 10"
+          },
+          "frameRate": {
+            "type": "number",
+            "description": "optional frames/second; default 30"
+          },
+          "bgColor": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "optional RGB [0..1,0..1,0..1]"
+          },
+          "workAreaStart": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "workAreaDuration": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "displayStartTime": {
+            "type": "number",
+            "description": "optional seconds"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "comp",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.update",
+      "description": "Update selected composition settings",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "name": "optional name",
+        "width": "optional integer 4..30000",
+        "height": "optional integer 4..30000",
+        "pixelAspect": "optional number",
+        "duration": "optional seconds",
+        "frameRate": "optional frames/second",
+        "bgColor": "optional RGB vector",
+        "workAreaStart": "optional seconds",
+        "workAreaDuration": "optional seconds",
+        "displayStartTime": "optional seconds"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional name"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 30000,
+            "description": "optional integer 4..30000"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 30000,
+            "description": "optional integer 4..30000"
+          },
+          "pixelAspect": {
+            "type": "number",
+            "description": "optional number"
+          },
+          "duration": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "frameRate": {
+            "type": "number",
+            "description": "optional frames/second"
+          },
+          "bgColor": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "optional RGB vector"
+          },
+          "workAreaStart": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "workAreaDuration": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "displayStartTime": {
+            "type": "number",
+            "description": "optional seconds"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.activate",
+      "description": "Open selected composition in the viewer",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.inspect",
+      "description": "Read the selected layer and optional property paths",
+      "mutates": false,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "properties": "optional list of property paths; max 100"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "properties": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                ]
+              }
+            },
+            "description": "optional list of property paths; max 100"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.text.create",
+      "description": "Create a text layer with optional text style",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "text": "text content",
+        "name": "optional layer name",
+        "font": "optional installed font PostScript name",
+        "fontSize": "optional positive number",
+        "fillColor": "optional RGB vector",
+        "applyFill": "optional boolean",
+        "justification": "optional left, center or right",
+        "bold": "optional faux bold",
+        "italic": "optional faux italic"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 262144,
+            "description": "text content"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional layer name"
+          },
+          "font": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional installed font PostScript name"
+          },
+          "fontSize": {
+            "type": "number",
+            "description": "optional positive number"
+          },
+          "fillColor": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "optional RGB vector"
+          },
+          "applyFill": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "justification": {
+            "type": "string",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "description": "optional left, center or right"
+          },
+          "bold": {
+            "type": "boolean",
+            "description": "optional faux bold"
+          },
+          "italic": {
+            "type": "boolean",
+            "description": "optional faux italic"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.solid.create",
+      "description": "Create a solid in the selected composition",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "color": "RGB [0..1,0..1,0..1]",
+        "name": "optional layer name",
+        "width": "optional integer",
+        "height": "optional integer",
+        "pixelAspect": "optional number",
+        "duration": "optional seconds"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "color": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "RGB [0..1,0..1,0..1]"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional layer name"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 30000,
+            "description": "optional integer"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 30000,
+            "description": "optional integer"
+          },
+          "pixelAspect": {
+            "type": "number",
+            "description": "optional number"
+          },
+          "duration": {
+            "type": "number",
+            "description": "optional seconds"
+          }
+        },
+        "required": [
+          "color"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.null.create",
+      "description": "Create a null layer",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "name": "optional layer name",
+        "duration": "optional seconds"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional layer name"
+          },
+          "duration": {
+            "type": "number",
+            "description": "optional seconds"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.duplicate",
+      "description": "Duplicate the selected layer",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "name": "optional new name"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional new name"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.update",
+      "description": "Update layer timing, flags and transform values",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "name": "optional name",
+        "startTime": "optional seconds",
+        "inPoint": "optional seconds",
+        "outPoint": "optional seconds",
+        "label": "optional integer 0..16",
+        "enabled": "optional boolean",
+        "shy": "optional boolean",
+        "locked": "optional boolean",
+        "solo": "optional boolean",
+        "threeDLayer": "optional boolean",
+        "guideLayer": "optional boolean",
+        "adjustmentLayer": "optional boolean",
+        "transform": "optional {position,anchorPoint,scale,rotation,xRotation,yRotation,zRotation,opacity}"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional name"
+          },
+          "startTime": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "inPoint": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "outPoint": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "label": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16,
+            "description": "optional integer 0..16"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "shy": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "locked": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "solo": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "threeDLayer": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "guideLayer": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "adjustmentLayer": {
+            "type": "boolean",
+            "description": "optional boolean"
+          },
+          "transform": {
+            "type": "object",
+            "properties": {
+              "position": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "anchorPoint": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "scale": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "rotation": {
+                "type": "number"
+              },
+              "xRotation": {
+                "type": "number"
+              },
+              "yRotation": {
+                "type": "number"
+              },
+              "zRotation": {
+                "type": "number"
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "additionalProperties": false,
+            "description": "optional {position,anchorPoint,scale,rotation,xRotation,yRotation,zRotation,opacity}"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.parent",
+      "description": "Parent or unparent a layer within its composition",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "parent": "layer selector or null",
+        "preserveTransforms": "optional boolean; default true"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "ref": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
+                    "required": [
+                      "ref"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "index"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "layer selector or null"
+          },
+          "preserveTransforms": {
+            "type": "boolean",
+            "description": "optional boolean; default true"
+          }
+        },
+        "required": [
+          "layer",
+          "parent"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.property.list",
+      "description": "Read child property names, matchNames and indices for discovering exact paths",
+      "mutates": false,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "path": "optional property path; omit for top-level layer properties",
+        "maxProperties": "optional integer 1..5000; default 200"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "path": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            },
+            "description": "optional property path; omit for top-level layer properties"
+          },
+          "maxProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional integer 1..5000; default 200"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.property.get",
+      "description": "Read a layer property and optional keyframes",
+      "mutates": false,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "path": "array of exact matchNames/names or positive indices",
+        "keys": "optional boolean; default false"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "path": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            },
+            "description": "array of exact matchNames/names or positive indices"
+          },
+          "keys": {
+            "type": "boolean",
+            "description": "optional boolean; default false"
+          }
+        },
+        "required": [
+          "layer",
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.property.set",
+      "description": "Set a static property or a value at a specified time",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "path": "property path",
+        "value": "number, string, boolean or numeric vector",
+        "time": "optional keyframe time in seconds"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "path": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            },
+            "description": "property path"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "maxLength": 262144
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 16
+              }
+            ],
+            "description": "number, string, boolean or numeric vector"
+          },
+          "time": {
+            "type": "number",
+            "description": "optional keyframe time in seconds"
+          }
+        },
+        "required": [
+          "layer",
+          "path",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.property.keyframes",
+      "description": "Add or update keyframes with optional temporal easing; preserves other keys",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "path": "property path",
+        "keys": "1..5000 {time,value,interpolation?:linear|bezier|hold,easing?:ease|ease-in|ease-out|ease-in-out or {inSpeed,outSpeed,inInfluence,outInfluence}}"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "path": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            },
+            "description": "property path"
+          },
+          "keys": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5000,
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "number"
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string",
+                      "maxLength": 262144
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "maxItems": 16
+                    }
+                  ]
+                },
+                "interpolation": {
+                  "type": "string",
+                  "enum": [
+                    "linear",
+                    "bezier",
+                    "hold"
+                  ]
+                },
+                "easing": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "ease",
+                        "ease-in",
+                        "ease-out",
+                        "ease-in-out"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "inSpeed": {
+                          "type": "number"
+                        },
+                        "outSpeed": {
+                          "type": "number"
+                        },
+                        "inInfluence": {
+                          "type": "number",
+                          "minimum": 0.1,
+                          "maximum": 100
+                        },
+                        "outInfluence": {
+                          "type": "number",
+                          "minimum": 0.1,
+                          "maximum": 100
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "time",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "description": "1..5000 {time,value,interpolation?:linear|bezier|hold,easing?:ease|ease-in|ease-out|ease-in-out or {inSpeed,outSpeed,inInfluence,outInfluence}}"
+          }
+        },
+        "required": [
+          "layer",
+          "path",
+          "keys"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.property.expression",
+      "description": "Set or clear an After Effects property expression",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "path": "property path",
+        "expression": "expression string; empty clears",
+        "enabled": "optional boolean"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "path": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              ]
+            },
+            "description": "property path"
+          },
+          "expression": {
+            "type": "string",
+            "maxLength": 65536,
+            "description": "expression string; empty clears"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "optional boolean"
+          }
+        },
+        "required": [
+          "layer",
+          "path",
+          "expression"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.effect.add",
+      "description": "Add an installed effect using its exact matchName",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "matchName": "registered effect matchName",
+        "name": "optional effect instance name"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "matchName": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "registered effect matchName"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional effect instance name"
+          }
+        },
+        "required": [
+          "layer",
+          "matchName"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.shape.create",
+      "description": "Create a rectangle, ellipse, star, polygon or Bezier path shape layer",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "name": "optional layer name",
+        "shape": "rect, ellipse, star, polygon or path",
+        "size": "rect/ellipse [width,height]",
+        "position": "optional shape-local [x,y]",
+        "roundness": "optional rectangle corner radius",
+        "points": "optional star/polygon point count; default 5",
+        "outerRadius": "optional star/polygon radius; default 100",
+        "innerRadius": "optional star inner radius; default 50",
+        "shapeRotation": "optional star/polygon rotation degrees",
+        "vertices": "path [[x,y],...]",
+        "inTangents": "optional path tangent vectors",
+        "outTangents": "optional path tangent vectors",
+        "closed": "optional path boolean; default true",
+        "fillColor": "optional RGB vector",
+        "strokeColor": "optional RGB vector",
+        "strokeWidth": "optional nonnegative number; default 2"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional layer name"
+          },
+          "shape": {
+            "type": "string",
+            "enum": [
+              "rect",
+              "ellipse",
+              "path",
+              "star",
+              "polygon"
+            ],
+            "description": "rect, ellipse, star, polygon or path"
+          },
+          "size": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "rect/ellipse [width,height]"
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "optional shape-local [x,y]"
+          },
+          "roundness": {
+            "type": "number",
+            "description": "optional rectangle corner radius"
+          },
+          "points": {
+            "type": "number",
+            "description": "optional star/polygon point count; default 5"
+          },
+          "outerRadius": {
+            "type": "number",
+            "description": "optional star/polygon radius; default 100"
+          },
+          "innerRadius": {
+            "type": "number",
+            "description": "optional star inner radius; default 50"
+          },
+          "shapeRotation": {
+            "type": "number",
+            "description": "optional star/polygon rotation degrees"
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 5000,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "description": "path [[x,y],...]"
+          },
+          "inTangents": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 5000,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "description": "optional path tangent vectors"
+          },
+          "outTangents": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 5000,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "description": "optional path tangent vectors"
+          },
+          "closed": {
+            "type": "boolean",
+            "description": "optional path boolean; default true"
+          },
+          "fillColor": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "optional RGB vector"
+          },
+          "strokeColor": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "optional RGB vector"
+          },
+          "strokeWidth": {
+            "type": "number",
+            "description": "optional nonnegative number; default 2"
+          }
+        },
+        "required": [
+          "shape"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.rebuildMedia",
+      "description": "Rebuild a 2D composition from original media, baking nested transforms without retaining precomps",
+      "mutates": true,
+      "args": {
+        "comp": "source comp selector",
+        "name": "new composition name",
+        "sampleRate": "optional samples per second; default source frameRate",
+        "resumeCompId": "optional existing partial rebuild composition id"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "source comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "new composition name"
+          },
+          "sampleRate": {
+            "type": "number",
+            "description": "optional samples per second; default source frameRate"
+          },
+          "resumeCompId": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "optional existing partial rebuild composition id"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "comp",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.duplicate",
+      "description": "Duplicate a composition, preserving its layer sources; optional step.as creates a comp reference",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "name": "optional duplicate composition name"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional duplicate composition name"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": "comp",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.precompose",
+      "description": "Move selected layers into a new precomposition; optional step.as creates a comp reference",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layers": "1..1000 unique layer selectors",
+        "name": "new precomposition name",
+        "moveAttributes": "optional boolean; default true; false requires exactly one layer"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
+                  },
+                  "required": [
+                    "ref"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "index": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "index"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "description": "1..1000 unique layer selectors"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "new precomposition name"
+          },
+          "moveAttributes": {
+            "type": "boolean",
+            "description": "optional boolean; default true; false requires exactly one layer"
+          }
+        },
+        "required": [
+          "layers",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "comp",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.camera.create",
+      "description": "Create a camera using a 2D creation center; configure zoom and one-node/two-node orientation",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "name": "optional camera name; default Camera",
+        "position": "optional [x,y] creation center; default composition center",
+        "type": "optional one-node or two-node; default two-node",
+        "zoom": "optional camera zoom >= 0.001 and <= 10000000"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional camera name; default Camera"
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "optional [x,y] creation center; default composition center"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "one-node",
+              "two-node"
+            ],
+            "description": "optional one-node or two-node; default two-node"
+          },
+          "zoom": {
+            "type": "number",
+            "description": "optional camera zoom >= 0.001 and <= 10000000"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.light.create",
+      "description": "Create a light with an explicit type, 2D creation center and optional color/intensity",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "name": "optional light name; default Light",
+        "type": "optional point, spot, parallel or ambient; default point",
+        "position": "optional [x,y] creation center; default composition center",
+        "color": "optional RGB [0..1,0..1,0..1]",
+        "intensity": "optional number 0..100000"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional light name; default Light"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "point",
+              "spot",
+              "parallel",
+              "ambient"
+            ],
+            "description": "optional point, spot, parallel or ambient; default point"
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "optional [x,y] creation center; default composition center"
+          },
+          "color": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "optional RGB [0..1,0..1,0..1]"
+          },
+          "intensity": {
+            "type": "number",
+            "description": "optional number 0..100000"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.remove",
+      "description": "Remove exactly the selected unlocked layer",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.select",
+      "description": "Select exact layers; replace defaults true, and an empty list clears the selection",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layers": "0..1000 unique unlocked layer selectors",
+        "replace": "optional boolean; default true"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layers": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1000,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "ref": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
+                  },
+                  "required": [
+                    "ref"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "index": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "index"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "description": "0..1000 unique unlocked layer selectors"
+          },
+          "replace": {
+            "type": "boolean",
+            "description": "optional boolean; default true"
+          }
+        },
+        "required": [
+          "layers"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.blendMode",
+      "description": "Set an AV layer's actual blendingMode using a supported mode name",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "mode": "Normal, Add, Multiply, Screen, Overlay, SoftLight, HardLight, ColorDodge, ColorBurn, Difference, Exclusion, Hue, Saturation, Color, Luminosity, Darken or Lighten"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "Normal",
+              "Add",
+              "Multiply",
+              "Screen",
+              "Overlay",
+              "SoftLight",
+              "HardLight",
+              "ColorDodge",
+              "ColorBurn",
+              "Difference",
+              "Exclusion",
+              "Hue",
+              "Saturation",
+              "Color",
+              "Luminosity",
+              "Darken",
+              "Lighten"
+            ],
+            "description": "Normal, Add, Multiply, Screen, Overlay, SoftLight, HardLight, ColorDodge, ColorBurn, Difference, Exclusion, Hue, Saturation, Color, Luminosity, Darken or Lighten"
+          }
+        },
+        "required": [
+          "layer",
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.project.search",
+      "description": "Find project items by name and type without changing the project",
+      "mutates": false,
+      "args": {
+        "query": "name substring; empty lists all",
+        "type": "optional all, composition, footage, solid or folder; footage includes solids",
+        "maxItems": "optional integer 1..5000; default 100"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "name substring; empty lists all"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "all",
+              "composition",
+              "footage",
+              "solid",
+              "folder"
+            ],
+            "description": "optional all, composition, footage, solid or folder; footage includes solids"
+          },
+          "maxItems": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional integer 1..5000; default 100"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.hierarchy",
+      "description": "Read composition, layer parents and nested precomp links with bounded traversal",
+      "mutates": false,
+      "args": {
+        "comp": "optional composition selector",
+        "maxLayers": "optional total layer limit 1..5000; default 1000"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional composition selector"
+          },
+          "maxLayers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional total layer limit 1..5000; default 1000"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.media.import",
+      "description": "Import existing media or an .aep/.aepx project as a folder into the open project",
+      "mutates": true,
+      "args": {
+        "path": "absolute source file path",
+        "sequence": "optional boolean; default false",
+        "forceAlphabetical": "optional boolean; requires sequence:true"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "absolute source file path"
+          },
+          "sequence": {
+            "type": "boolean",
+            "description": "optional boolean; default false"
+          },
+          "forceAlphabetical": {
+            "type": "boolean",
+            "description": "optional boolean; requires sequence:true"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "item",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.layer.media.add",
+      "description": "Add an installed project footage item or precomp as a layer",
+      "mutates": true,
+      "args": {
+        "comp": "optional composition selector",
+        "item": "project item selector {id|name|ref}",
+        "name": "optional layer name",
+        "startTime": "optional seconds",
+        "inPoint": "optional seconds; supply with outPoint",
+        "outPoint": "optional seconds; supply with inPoint"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional composition selector"
+          },
+          "item": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "project item selector {id|name|ref}"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional layer name"
+          },
+          "startTime": {
+            "type": "number",
+            "description": "optional seconds"
+          },
+          "inPoint": {
+            "type": "number",
+            "description": "optional seconds; supply with outPoint"
+          },
+          "outPoint": {
+            "type": "number",
+            "description": "optional seconds; supply with inPoint"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": "layer",
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.project.open",
+      "description": "Open an existing .aep/.aepx as the current project; refuses to replace unsaved changes",
+      "mutates": true,
+      "args": {
+        "path": "absolute path to an existing .aep or .aepx file"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": true
+    },
+    {
+      "name": "team.project.save",
+      "description": "Save the current project or an explicit destination; replacing another file requires overwrite:true",
+      "mutates": true,
+      "args": {
+        "path": "optional absolute .aep or .aepx path; omit to save the current project file",
+        "overwrite": "optional boolean; default false for a different existing destination"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "optional absolute .aep or .aepx path; omit to save the current project file"
+          },
+          "overwrite": {
+            "type": "boolean",
+            "description": "optional boolean; default false for a different existing destination"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": true
+    },
+    {
+      "name": "team.project.undo",
+      "description": "Request one native After Effects Undo command; call this tool by itself",
+      "mutates": true,
+      "args": {},
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": true
+    },
+    {
+      "name": "team.render.queue.add",
+      "description": "Queue one composition at an explicit output path using exact installed template names",
+      "mutates": true,
+      "args": {
+        "comp": "optional composition selector",
+        "outputPath": "absolute output path; existing files require overwrite:true",
+        "renderTemplate": "optional exact render-settings template name",
+        "outputTemplate": "optional exact output-module template name",
+        "overwrite": "optional boolean; default false"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional composition selector"
+          },
+          "outputPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "absolute output path; existing files require overwrite:true"
+          },
+          "renderTemplate": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional exact render-settings template name"
+          },
+          "outputTemplate": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional exact output-module template name"
+          },
+          "overwrite": {
+            "type": "boolean",
+            "description": "optional boolean; default false"
+          }
+        },
+        "required": [
+          "outputPath"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.render.start",
+      "description": "Render the enabled queued items once and report their native final states; call this tool by itself",
+      "mutates": true,
+      "args": {},
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": true
+    },
+    {
+      "name": "team.effects.list",
+      "description": "Read registered AE effects directly without creating test layers; registration does not prove licensing",
+      "mutates": false,
+      "args": {
+        "search": "optional case-insensitive display name/matchName search",
+        "category": "optional exact case-insensitive category",
+        "maxItems": "optional integer 1..5000; default 200"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional case-insensitive display name/matchName search"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "optional exact case-insensitive category"
+          },
+          "maxItems": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional integer 1..5000; default 200"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.effect.inspect",
+      "description": "Read applied effects and bounded nested property values without changing layers",
+      "mutates": false,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "maxProperties": "optional integer 1..5000 total effect/property nodes; default 200"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "maxProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "optional integer 1..5000 total effect/property nodes; default 200"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.effect.remove",
+      "description": "Remove exactly one applied effect selected by unambiguous instance name or index",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "layer": "layer selector",
+        "effect": "exact selector: {index:positive integer} or {name:exact instance name}"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "layer": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "layer selector"
+          },
+          "effect": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "index"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "exact selector: {index:positive integer} or {name:exact instance name}"
+          }
+        },
+        "required": [
+          "layer",
+          "effect"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.inspection.capture",
+      "description": "Export the current frame by default, or up to 3 sampled frames; at most one capture call per request to limit preview rendering; does not save or import project data",
+      "mutates": false,
+      "args": {
+        "comp": "optional comp selector",
+        "times": "optional 1..3 explicit seconds in valid frame range; cannot combine with numFrames",
+        "numFrames": "optional integer 1..3 evenly sampled frames; default captures only the current time"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "times": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "minimum": 0
+            },
+            "description": "optional 1..3 explicit seconds in valid frame range; cannot combine with numFrames"
+          },
+          "numFrames": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "optional integer 1..3 evenly sampled frames; default captures only the current time"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    },
+    {
+      "name": "team.comp.seek",
+      "description": "Set the composition viewer time for preview inspection",
+      "mutates": true,
+      "args": {
+        "comp": "optional comp selector",
+        "time": "composition time in seconds"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "comp": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "ref"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "optional comp selector"
+          },
+          "time": {
+            "type": "number",
+            "description": "composition time in seconds"
+          }
+        },
+        "required": [
+          "time"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": false,
+      "exclusive": false
+    }
+  ],
+  "maintenanceFunctions": [
+    {
+      "name": "team.script.run",
+      "description": "Maintenance only: call an archived project-specific JSX branch",
+      "mutates": true,
+      "args": {
+        "branch": "exact archived branch name, including .jsx"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "branch": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "exact archived branch name, including .jsx"
+          }
+        },
+        "required": [
+          "branch"
+        ],
+        "additionalProperties": false
+      },
+      "resultRef": null,
+      "internal": true,
+      "exclusive": false
+    }
+  ],
+  "legacyBranches": [
+    {
+      "name": "Codex Library.jsx",
+      "id": "ae_script_codex_library_4362641e06",
+      "function": "team.script.run",
+      "args": {
+        "branch": "Codex Library.jsx"
+      },
+      "description": "Codex Library: Read-only, incremental inventories used by Codex Bridge. No project mutations.",
+      "categories": [
+        "audio",
+        "composition",
+        "internal-inventory",
+        "static-project-hints"
+      ],
+      "risks": [
+        "ambiguous-media-or-string-replace",
+        "delete",
+        "file-close",
+        "file-delete",
+        "file-io-or-external-action"
+      ],
+      "sourceSha256": "a30ec870386b57523a20dd8800dc93b951e566cb49dc8d02d8d9551e252c1ea7",
+      "runtimeVerified": false
+    }
+  ],
+  "capabilitiesRelativePath": ".ae-codex/functions/capabilities.json",
+  "capabilitySummary": {
+    "branches": 1,
+    "internalBranches": 1,
+    "syntaxValid": 1,
+    "syntaxInvalid": 0,
+    "uniqueExactSources": 1,
+    "uniqueStructuralShapes": 1,
+    "exactDuplicateGroups": 0,
+    "structuralVariantGroups": 0,
+    "riskCounts": {
+      "ambiguous-media-or-string-replace": 1,
+      "delete": 1,
+      "file-close": 1,
+      "file-delete": 1,
+      "file-io-or-external-action": 1
+    }
+  }
+}

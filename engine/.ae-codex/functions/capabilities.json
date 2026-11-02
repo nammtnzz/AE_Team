@@ -1,0 +1,212 @@
+{
+  "schema": "aect-script-capabilities/v1",
+  "analysis": {
+    "mode": "static-only",
+    "runtimeVerified": false,
+    "parser": "node-vm-compatible-syntax",
+    "limitations": [
+      "Static hints are literal candidates, not verified project requirements.",
+      "API matching is heuristic: aliases, dynamic receivers and shared method names can cause false positives or missed operations.",
+      "No detected mutation or risk is not proof that a script is read-only or safe.",
+      "Node-compatible syntax parsing does not prove ExtendScript ES3 or AE runtime compatibility.",
+      "Structural duplicate groups ignore literal values; they are not semantic equivalence and are never merged."
+    ],
+    "hintLimitPerCategory": 16,
+    "hintValueLimit": 160,
+    "searchTokenLimit": 96
+  },
+  "coverage": {
+    "sourceBranches": 1,
+    "inventoryBranches": 1,
+    "mappedBranches": 1,
+    "missing": [],
+    "extras": [],
+    "complete": true
+  },
+  "summary": {
+    "branches": 1,
+    "internalBranches": 1,
+    "syntaxValid": 1,
+    "syntaxInvalid": 0,
+    "uniqueExactSources": 1,
+    "uniqueStructuralShapes": 1,
+    "exactDuplicateGroups": 0,
+    "structuralVariantGroups": 0,
+    "riskCounts": {
+      "ambiguous-media-or-string-replace": 1,
+      "delete": 1,
+      "file-close": 1,
+      "file-delete": 1,
+      "file-io-or-external-action": 1
+    }
+  },
+  "branches": [
+    {
+      "name": "Codex Library.jsx",
+      "capabilityId": "ae_script_codex_library_4362641e06",
+      "toolName": "ae_script_codex_library_4362641e06",
+      "kind": "legacy-script",
+      "internal": true,
+      "description": "Codex Library: Read-only, incremental inventories used by Codex Bridge. No project mutations.",
+      "categories": [
+        "audio",
+        "composition",
+        "internal-inventory",
+        "static-project-hints"
+      ],
+      "searchTokens": [
+        "60",
+        "acknowledge",
+        "action",
+        "ae",
+        "ambiguous",
+        "and",
+        "audio",
+        "background",
+        "bridge",
+        "by",
+        "close",
+        "codex",
+        "composition",
+        "config",
+        "current",
+        "delete",
+        "did",
+        "effects",
+        "errors",
+        "external",
+        "file",
+        "hints",
+        "incremental",
+        "internal",
+        "inventories",
+        "inventory",
+        "io",
+        "json",
+        "jsx",
+        "latest",
+        "launch",
+        "launcher",
+        "library",
+        "log",
+        "media",
+        "mutations",
+        "no",
+        "not",
+        "only",
+        "or",
+        "parameters",
+        "pending",
+        "project",
+        "read",
+        "repair",
+        "replace",
+        "requests",
+        "run",
+        "runtime",
+        "seconds",
+        "see",
+        "service",
+        "sfx",
+        "static",
+        "string",
+        "tsv",
+        "update",
+        "used",
+        "within"
+      ],
+      "sourceSha256": "a30ec870386b57523a20dd8800dc93b951e566cb49dc8d02d8d9551e252c1ea7",
+      "sourceBytes": 43205,
+      "call": {
+        "function": "team.script.run",
+        "args": {
+          "branch": "Codex Library.jsx"
+        }
+      },
+      "staticHints": {
+        "comps": [],
+        "layers": [],
+        "files": [
+          {
+            "value": "\\\\",
+            "line": 10,
+            "via": "path literal"
+          },
+          {
+            "value": "/current.json",
+            "line": 192,
+            "via": "path literal"
+          },
+          {
+            "value": "/config.json",
+            "line": 199,
+            "via": "path literal"
+          },
+          {
+            "value": "/latest-effects.json",
+            "line": 225,
+            "via": "path literal"
+          },
+          {
+            "value": "/latest-sfx.json",
+            "line": 245,
+            "via": "path literal"
+          },
+          {
+            "value": "/requests/pending-launch.json",
+            "line": 283,
+            "via": "path literal"
+          },
+          {
+            "value": "/runtime.json",
+            "line": 400,
+            "via": "path literal"
+          },
+          {
+            "value": "SFX background service did not acknowledge within 60 seconds. Run Codex AE Update/Repair; see .ae-codex/library/launcher-errors.log",
+            "line": 422,
+            "via": "path literal"
+          },
+          {
+            "value": "/effects-and-parameters.tsv",
+            "line": 507,
+            "via": "path literal"
+          },
+          {
+            "value": ".ae-codex/library/current.json",
+            "line": 598,
+            "via": "path literal"
+          }
+        ],
+        "effects": [],
+        "truncated": false
+      },
+      "risks": [
+        "ambiguous-media-or-string-replace",
+        "delete",
+        "file-close",
+        "file-delete",
+        "file-io-or-external-action"
+      ],
+      "projectMutation": "possible",
+      "dependencies": [],
+      "missingDependencies": [],
+      "syntax": {
+        "valid": true,
+        "parser": "node-vm-compatible-syntax"
+      },
+      "duplicates": {
+        "exactGroup": null,
+        "structuralGroup": null
+      },
+      "runtimeVerified": false
+    }
+  ],
+  "duplicateGroups": {
+    "exact": [],
+    "structural": []
+  },
+  "revision": "f3ac1f6b8dbf77ef3b1847699411c58f3257b5209f1467d56d307252dd8cda24",
+  "sourceFileSha256": "31b110a47ce0e0147602c4fe03343a176365f13284433534f5da8474871df3b7",
+  "inventoryFileSha256": "f6379ac59e98e7a9e247b76f2efd5fcb776ceaa5d473a8c3a2024b324da15699"
+}

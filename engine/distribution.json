@@ -1,0 +1,232 @@
+{
+  "schema": "aect-distribution/v1",
+  "version": "1.1.0",
+  "packageId": "1.1.0-72754977cd44",
+  "bridgeVersion": "1.18.8",
+  "toolCount": 43,
+  "archiveBranches": 0,
+  "internalBranches": [
+    "Codex Library.jsx"
+  ],
+  "requirements": {
+    "os": "Windows",
+    "node": ">=20",
+    "powershell": ">=7",
+    "host": "Adobe After Effects"
+  },
+  "readmeSha256": "42014ed13c1a13fe57f2c0bbf22be22e557c49c09c7ee3e3e4e99f5e9ca889d2",
+  "commandSha256": "3d49e309c8f317cca1d85610fb43a10d3a7811b56ec43e62fe046c09029c4778",
+  "launcherSourceSha256": "04413326a82bea0e3c13c61177b65e17768bd9965dc54c3c70c8731e4181b65a",
+  "files": [
+    {
+      "path": ".ae-codex/functions/capabilities.json",
+      "sha256": "a60b5dd6a807270239a5e744300facf2bca740e9d705e67be32df0db25075fd7",
+      "bytes": 5546
+    },
+    {
+      "path": ".ae-codex/functions/catalog.json",
+      "sha256": "91fc28ff6fc2847f2ce545bc5e681b33d4e7101e6a5ee2196db710754b46bf12",
+      "bytes": 126621
+    },
+    {
+      "path": ".ae-codex/library/USAGE.md",
+      "sha256": "28df2317064d44a6328a837081238984d0de6a7c9d72ae1a2814982e89bcbda0",
+      "bytes": 1659
+    },
+    {
+      "path": ".ae-codex/plugins/USAGE.md",
+      "sha256": "4fe290b37b552fcf258e82ad4b04debabfde113017bb15a65353e9a5f07318ff",
+      "bytes": 423
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "b2671cb2901de10b414853352662a3edbdf2a887f8dd5abca237bf63d956795e",
+      "bytes": 3092
+    },
+    {
+      "path": "jsx/AECT Engine.jsx",
+      "sha256": "926c3c59740a29d580c73db24d212cca1f26434e7e6e1c3c53dc7eca615515f3",
+      "bytes": 294433
+    },
+    {
+      "path": "source/bridge.js",
+      "sha256": "08f273197a24f1d63bc5ff0863a62c6ff382734e57f9d64d5c6e56903563d9ec",
+      "bytes": 95479
+    },
+    {
+      "path": "source/bundle-runtime.js",
+      "sha256": "61be1e81df22daebb3ab6d0d00d5e28ec2b49ad8eb2f097050c71e7222f2a10d",
+      "bytes": 16711
+    },
+    {
+      "path": "source/functions-inspection-tools.js",
+      "sha256": "636d6c6068e0867efc2c5f3fc630b55aee111d128a8ee39dc5ab6b3c84fc0600",
+      "bytes": 16152
+    },
+    {
+      "path": "source/functions-layer-tools.js",
+      "sha256": "c2d207579fd59dc514c67b6e17d3b8f2e24af7076da5532f51e007e2547f2ba7",
+      "bytes": 11127
+    },
+    {
+      "path": "source/functions-project-tools.js",
+      "sha256": "eaf0b9427238ec85a32de835a8c57c6b7f8a3afdca98bad9c7553d2b84b53074",
+      "bytes": 24793
+    },
+    {
+      "path": "source/functions-runtime.js",
+      "sha256": "7ffb9bbe676c1c8d06f3a056f08e3fcea087779ede91e497e1325f50b456cadf",
+      "bytes": 84388
+    },
+    {
+      "path": "source/script-inventory.json",
+      "sha256": "a887a979bfb70450e55bef9b44bab11497534f63fa3d150dc20acc87c43557b5",
+      "bytes": 89
+    },
+    {
+      "path": "source/scripts.json",
+      "sha256": "e3c81d6bceaff7b4116c145499eb4eaf36202be2ef089d8f27843621fd788357",
+      "bytes": 45385
+    },
+    {
+      "path": "tools/AeBackgroundLauncher.cs",
+      "sha256": "737b09e0a40af7b1a282176d14aeab7942fc0cf892c016aee5446840d56295f0",
+      "bytes": 31938
+    },
+    {
+      "path": "tools/AeBackgroundServiceLifecycle.ps1",
+      "sha256": "f706eea2f610388047970e0254c7400d316c7ef59c147bc1d4758a84018a84e0",
+      "bytes": 7733
+    },
+    {
+      "path": "tools/AeBridgePanel.js",
+      "sha256": "2b26d9aaf51a90afd13ecb7b984f4c37c6e1e18cedd162c5f998baee5efa8105",
+      "bytes": 1832
+    },
+    {
+      "path": "tools/AeBridgeStartup.js",
+      "sha256": "970c74c30a888840bfe2b352d71b7b97ecb939801ecd0dc04f7cc6c43a6a4213",
+      "bytes": 1342
+    },
+    {
+      "path": "tools/AeCapabilities.js",
+      "sha256": "78055c6dcd39ce9b0c0e296f460f807875b8579438c540f0e74a25894901e0da",
+      "bytes": 12717
+    },
+    {
+      "path": "tools/AeCodexConfig.js",
+      "sha256": "dc4bc6f82acbb6b30d46f036b63f4e3c00fd0b0fd977deefc9ba56f1bc3bc5c6",
+      "bytes": 21742
+    },
+    {
+      "path": "tools/AeFunctionRequest.ps1",
+      "sha256": "2e1d42367cb40ce9cfd168768c0f00b739fad16a0f0e276ef1d4e7a6080d10a1",
+      "bytes": 4359
+    },
+    {
+      "path": "tools/AeFunctionsMcp.js",
+      "sha256": "14051414adb0631223a0acd09c5c88162b3932c5d476cb4f975989f1d6965a4e",
+      "bytes": 14330
+    },
+    {
+      "path": "tools/AeFunctionsSource.js",
+      "sha256": "f6c00464cced9df5750c34470547c9aa6ca36aa555678f0acef8c169262e1d16",
+      "bytes": 922
+    },
+    {
+      "path": "tools/AeScriptCapabilities.js",
+      "sha256": "02acb458c12849a99e22a9f2ad73a0be3c83bc07df55f127b2877ccd2b55fcab",
+      "bytes": 21610
+    },
+    {
+      "path": "tools/AeScriptSource.js",
+      "sha256": "feb10102936019b55146016f4d595dfc76346c3ad4f315097fbb46143fbe4b82",
+      "bytes": 9130
+    },
+    {
+      "path": "tools/Build-AeScriptBundle.js",
+      "sha256": "f53eaec261105022522693d6550080d07597a8b8a7c375c07d4f014713f81e59",
+      "bytes": 17632
+    },
+    {
+      "path": "tools/Get-AeCapabilities.js",
+      "sha256": "a59f0ca4e6b0a09b94d70e8ebb5b0eba3c9d133ccc2a088d215ce3ddede65acc",
+      "bytes": 691
+    },
+    {
+      "path": "tools/Get-AeFunctions.ps1",
+      "sha256": "a0eab6489798451143027ca0f98c70bbf92b6baf8caeffa34764787dbb8f50b1",
+      "bytes": 1709
+    },
+    {
+      "path": "tools/Get-AeInspectionReport.ps1",
+      "sha256": "45b7bbae571329bc2c41b87a0443710370e08510bec729df7b1f9292289d042a",
+      "bytes": 10320
+    },
+    {
+      "path": "tools/Initialize-AeLibrary.ps1",
+      "sha256": "4d2382190d1fbc5192456d36f06ec7eefb4cb1568c108000741297fd2e7e4b5a",
+      "bytes": 16721
+    },
+    {
+      "path": "tools/Install-AeDistribution.ps1",
+      "sha256": "ad99526deeb0591c466072ff79960e45e755a92e814d3051a1ffec3e5c03384b",
+      "bytes": 25132
+    },
+    {
+      "path": "tools/Install-AeFunctionsMcp.ps1",
+      "sha256": "492d8229a89a7c80d6d47dbb8ef694004838b827940888d983fa750b8e729dc8",
+      "bytes": 8265
+    },
+    {
+      "path": "tools/Invoke-AeFunction.ps1",
+      "sha256": "443cab1382793c8965ea4434093a9633b8e6f5e04373d6743a69d83a12134c24",
+      "bytes": 2718
+    },
+    {
+      "path": "tools/Manage-AeInstallation.ps1",
+      "sha256": "dec0b51648c7f3dbda47a71d660074a5d20a08b1f21898a3944d41c7a2e54142",
+      "bytes": 68216
+    },
+    {
+      "path": "tools/Reset-AeBridgeLock.ps1",
+      "sha256": "d765010ae9a21cb184286e174fb7397a75e036c2c449a4ba18219c6e544b88b8",
+      "bytes": 1881
+    },
+    {
+      "path": "tools/Resolve-AeScriptTarget.ps1",
+      "sha256": "c512b9b1a68fd590d06fcb7c9e3788f0dfecb3030bf76fe31d2bb739bd5ef9be",
+      "bytes": 2937
+    },
+    {
+      "path": "tools/Start-AeSfxCatalog.ps1",
+      "sha256": "209c6bfab537a3fa650cf68bb405fa9891cc46056e27c72f1fd9a94a1ee0c070",
+      "bytes": 1563
+    },
+    {
+      "path": "tools/Submit-AeJsx.ps1",
+      "sha256": "0d38f406ea2f4b0ba4dca6c79d3d819d6c04f5c8216466c726b63d487499cf63",
+      "bytes": 16195
+    },
+    {
+      "path": "tools/Sync-CodexModelDisplay.ps1",
+      "sha256": "7d239f47bdc95712f4efdcf304cc297d02273b3ae310028e4543eb9813cf6abb",
+      "bytes": 1436
+    },
+    {
+      "path": "tools/Uninstall-AeDistribution.ps1",
+      "sha256": "589c9236bdd7a315fa276446ad0cd0da3a2c419d9e5d045bb08c7af5aeda8312",
+      "bytes": 31097
+    },
+    {
+      "path": "tools/Update-AeSfxCatalog.ps1",
+      "sha256": "51588f49b19c2e93f6aad9fb26ad8b1b8b6bf35017e3169a1ad4cbf0d6363a35",
+      "bytes": 26276
+    },
+    {
+      "path": "tools/Validate-AeBridgeInstallation.ps1",
+      "sha256": "f1af65b6426ed816346761323cc8bcbd7179a17346e7235be2a3e5d0b809ae1d",
+      "bytes": 6661
+    }
+  ]
+}
