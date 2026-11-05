@@ -9,6 +9,19 @@ const { searchLibrary } = require("./AeLibrarySearch.js");
 const root = path.resolve(__dirname, "..");
 const catalogPath = path.join(root, ".ae-codex/functions/catalog.json");
 const safeKey = key => !["__proto__", "prototype", "constructor"].includes(key);
+// PowerShell 7 is often not on PATH (e.g. only Codex's bundled copy exists). Prefer the
+// configured path, then PATH, then the standard install and the Codex runtime copy.
+function resolvePwsh() {
+    for (const configured of [process.env.AECT_PWSH, process.env.CODEX_AE_PWSH]) {
+        if (configured && fs.existsSync(configured)) { return configured; }
+    }
+    for (const folder of String(process.env.PATH || "").split(path.delimiter)) {
+        if (folder && fs.existsSync(path.join(folder, "pwsh.exe"))) { return path.join(folder, "pwsh.exe"); }
+    }
+    const candidates = [path.join(process.env.ProgramFiles || "C:/Program Files", "PowerShell", "7", "pwsh.exe"),
+        path.join(require("node:os").homedir(), ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "native", "powershell", "pwsh.exe")];
+    return candidates.find(candidate => fs.existsSync(candidate)) || "pwsh";
+}
 let cachedCatalog;
 function catalogIdentity() {
     const stat = fs.statSync(catalogPath);
@@ -84,7 +97,7 @@ function invoke(request) {
     fs.writeFileSync(requestPath, text + "\n", { flag: "wx" });
     return new Promise((resolve, reject) => {
         // No shell interpolation, process killing, or retry after a dispatch.
-        const child = spawn(process.env.AECT_PWSH || "pwsh", ["-NoLogo", "-NoProfile", "-NonInteractive", "-File",
+        const child = spawn(resolvePwsh(), ["-NoLogo", "-NoProfile", "-NonInteractive", "-File",
             path.join(root, "tools/Invoke-AeFunction.ps1"), "-Plan", requestPath, "-AsToolOutput", "-TimeoutSeconds", "180"],
             { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
         let stdout = "", stderr = "", outputOverflow = false;

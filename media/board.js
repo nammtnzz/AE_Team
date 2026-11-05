@@ -10,7 +10,7 @@
   const labels = { idle: 'SẴN SÀNG', running: 'ĐANG CHẠY', waiting: 'CHỜ XỬ LÝ', paused: 'TẠM DỪNG', done: 'HOÀN TẤT' };
   let state = { config: { roles: [] }, sessions: [], selectedId: '', hasKey: false };
   let gatewayModels = [];
-  const presets = { claude: ['claude-opus-5-5', 'claude-sonnet-5', 'claude-haiku-5.5'], codex: ['gpt-6.1-sol'], image: ['gpt-image-2.5-sunburst'] };
+  const presets = { claude: ['claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5', 'claude-haiku-5-5'], codex: ['gpt-6.1-sol'], image: ['gpt-image-2.5-sunburst'] };
   const familyFor = protocol => protocol === 'iw-imagegen' ? 'image' : ['claude-cli', 'messages'].includes(protocol) ? 'claude' : 'codex';
   const modelMatches = (id, family) => family === 'claude' ? /^claude-/i.test(id) : family === 'image' ? /^gpt-image-/i.test(id) : /^(?:gpt-|o[134](?:-|$)|codex-)/i.test(id) && !/^gpt-image-/i.test(id);
   function updateModelChoices(row, selected) {
@@ -143,6 +143,7 @@
     $('pauseBtn').disabled = session?.state !== 'running';
     $('footerStatus').textContent = state.active ? state.active + ' tác vụ đang chạy' : 'Team đã sẵn sàng';
     $('aeStripStatus').textContent = aeStatusLabel() + (state.ae?.status ? ' · ' + state.ae.status.activeTools + ' công cụ' : '');
+    renderLearning();
     $('boardView').innerHTML = statuses.map(([id, title]) => {
       const items = tasks.filter(t => t.status === id);
       return '<section class="column column-' + id + '"><div class="column-head"><span class="column-label"><i class="column-dot"></i>' +
@@ -366,6 +367,21 @@
     const connected = aeConnected(status);
     return ae.busy ? 'Đang chạy một lệnh AE…' : ae.hold ? 'Cần kiểm tra kết quả lệnh trước' : connected ? 'AE có heartbeat mới · có thể nhận lệnh' : status ? 'Engine sẵn sàng · chưa kết nối After Effects' : 'Chưa kiểm tra kết nối';
   }
+  // Học AE: Claude Opus 5 learns from sources and past work; progress, pause and resume.
+  function renderLearning() {
+    const learning = state.learning || {}; const status = learning.status; const busy = Boolean(learning.busy);
+    const labels = { running: 'Đang học', paused: 'Đã dừng', done: 'Xong', failed: 'Lỗi', idle: 'Chưa học' };
+    $('learnModel').textContent = learning.model || 'claude-opus-5';
+    $('learnBar').value = status ? status.percent || 0 : 0;
+    $('learnStatus').textContent = status ? (labels[status.state] || status.state) + ' · ' + (status.percent || 0) + '% · ' + (status.lessonsSaved || 0) + ' bài' +
+      (status.historyTotal ? ' · lịch sử ' + (status.historyLearned || 0) + '/' + status.historyTotal : '') + (status.topic ? ' · chủ đề: ' + status.topic : '') +
+      (status.error ? ' · ' + status.error : status.message ? ' · ' + status.message : '') : 'Chưa học. Nhập chủ đề (hoặc để trống) rồi bấm Học AE.';
+    $('learnStatus').title = $('learnStatus').textContent;
+    $('learnStartBtn').textContent = status?.state === 'paused' && !busy ? 'Tiếp tục' : 'Học AE';
+    $('learnStartBtn').disabled = busy;
+    $('learnPauseBtn').disabled = !busy;
+    $('learnTopic').disabled = busy || status?.state === 'paused';
+  }
   function renderAe() {
     const ae = state.ae || {}; const status = ae.status;
     const connected = aeConnected(status);
@@ -394,6 +410,11 @@
     renderMcpQueue();
   }
   $('aeOpenBtn').addEventListener('click', openAe);
+  $('learnStartBtn').addEventListener('click', () => {
+    const status = state.learning?.status;
+    if (status?.state === 'paused') send('learnResume'); else send('learnStart', { topic: $('learnTopic').value.trim() });
+  });
+  $('learnPauseBtn').addEventListener('click', () => send('learnPause'));
   $('aeOpenProject').addEventListener('click', () => send('aeOpenProject'));
   $('aeSaveProject').addEventListener('click', () => send('aeSaveProject'));
   $('aeCachedProject').addEventListener('click', () => send('aeCachedProject'));

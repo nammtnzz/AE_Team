@@ -9,6 +9,8 @@ param(
 # This bootstrap intentionally runs on Windows PowerShell before PowerShell 7 is installed.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Unicode user/install paths must survive child PowerShell output on non-UTF-8 consoles.
+$OutputEncoding = [Text.UTF8Encoding]::new($false); try { [Console]::OutputEncoding = $OutputEncoding } catch { }
 $payloadRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 function Find-SetupDependency([string]$Name) {

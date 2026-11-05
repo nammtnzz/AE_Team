@@ -12,7 +12,7 @@ function build(){
   const stage=fs.mkdtempSync(path.join(work,'release-'));
   const payload=path.join(stage,'payload');fs.mkdirSync(payload);
   const original=JSON.parse(fs.readFileSync(path.join(root,'engine/distribution.json')));
-  const allow=original.files.map(f=>f.path).concat('tools/AeLibrarySearch.js');
+  const allow=original.files.map(f=>f.path).concat('tools/AeLibrarySearch.js','tools/AeFunctionsMcpLauncher.js','tools/Invoke-AeRetention.ps1');
   for(const rel of new Set(allow)){
     const src=path.join(root,'engine',rel);if(!fs.lstatSync(src).isFile())throw Error('Bad engine input');
     const dest=path.join(payload,'engine',rel);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);

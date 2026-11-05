@@ -11,6 +11,8 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Unicode user/install paths must survive child PowerShell output on non-UTF-8 consoles.
+$OutputEncoding = [Text.UTF8Encoding]::new($false); try { [Console]::OutputEncoding = $OutputEncoding } catch { }
 $utf8 = [Text.UTF8Encoding]::new($false)
 $payloadRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $setupLock = $null

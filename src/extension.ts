@@ -8,6 +8,7 @@ import { TeamConfig, Session, Task, Proposal, COMMON, defaultConfig, validateCon
   readyTasks, refreshDependencyBlocks, imageIntent, IMAGE_ROUTE, retryTask, addEvent, demoSession, upgradeConfig, MODEL_PRESETS, QaMessage, RoleChat, ImageWork, newPoSession } from './core';
 import { GatewayConversation, endpoint } from './gateway';
 import { ClaudeCliConversation, findClaude } from './claude-cli';
+import { HistoryItem, KnowledgeStore, nextAnimationTopic, LEARNING_MODEL, LEARNING_SYSTEM, LEARNING_TOOLS, LearningStatus, knowledgeBlock, readLearningStatus, runLearning } from './learning';
 import { TOOLS, safePath, readText, listFiles, allowedFile, hash } from './files';
 import { AeEngine, AeProposal, AE_TOOLS, AE_READ_FUNCTIONS, makeAeProposal, boundedResult, ENGINE_MISSING } from './ae';
 import { roleWorkState } from './work-status';
@@ -26,6 +27,9 @@ let activeBoard: Board | undefined;
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const board = new Board(context); activeBoard = board;
   await board.initialize();
+  // Automatic learning starts shortly after VS Code settles, off the activation path.
+  const autoLearn = setTimeout(() => { void board.maybeAutoLearn(); }, 20000);
+  context.subscriptions.push({ dispose: () => clearTimeout(autoLearn) });
   context.subscriptions.push(
     vscode.commands.registerCommand('aeTeam.open', () => board.open()),
     vscode.commands.registerCommand('aeTeam.configure', () => { board.open(); board.send({ type: 'configure' }); }),
@@ -84,7 +88,12 @@ export class Board {
   private imageController?: AbortController;
   private imageWork: ImageWork[] = [];
   private roleChats: RoleChat[] = [];
-  private chatControllers = new Map<string, { roleId: string; sessionId: string; controller: AbortController }>();
+  // Học AE: learning is delegated to Claude Opus 5; lessons persist in the shared knowledge store.
+  private knowledge = new KnowledgeStore();
+  private learningController?: AbortController;
+  private learningPaused = false;
+  private learningStatus?: LearningStatus;
+  private chatControllers =new Map<string, { roleId: string; sessionId: string; controller: AbortController }>();
   private chatKey(roleId: string, sessionId: string): string { return JSON.stringify([sessionId, roleId]); }
   private get qaMessages(): QaMessage[] { return this.roleChats.find(c => c.roleId === 'qa' && c.sessionId === this.selectedId)?.messages || []; }
   // QA Stop/busy follow the selected session only; another session's QA chat keeps running.
@@ -131,6 +140,9 @@ export class Board {
     for (const chat of this.roleChats) for (const message of chat.messages) if (message.delivery === 'pending') {
       message.delivery = 'interrupted'; message.error = 'VS Code đã đóng trước khi nhận được câu trả lời. Không tự gửi lại.';
     }
+    // A learning run interrupted by closing VS Code resumes from its saved progress via Tiếp tục.
+    this.learningStatus = await readLearningStatus(this.knowledge).catch(() => undefined);
+    if (this.learningStatus?.state === 'running') this.learningStatus = { ...this.learningStatus, state: 'paused', message: 'VS Code đã đóng giữa chừng; bấm Tiếp tục để học tiếp' };
     for (const session of this.sessions) {
       if (session.tasks.some(t => /gameplay|Canvas|level & rà/i.test(t.title))) session.legacy = true;
       if (session.state === 'running') session.state = 'paused';
@@ -249,7 +261,8 @@ export class Board {
       active: this.activeTasks.size, deliveries, usage,
       toolbox: { snapshot: this.toolbox, enabled: this.mcpEnabled },
       mcp: { plans: this.mcpPlans, busy: this.mcpBusy, hold: this.mcpHold, open: this.hub.open }, ae: { status: this.aeStatus, busy: this.aeBusy, hold: this.aeHold,
-        plans: this.aeProposals, lastRead: this.aeLastRead, root: this.engine?.root || '' } });
+        plans: this.aeProposals, lastRead: this.aeLastRead, root: this.engine?.root || '' },
+      learning: { status: this.learningStatus, busy: Boolean(this.learningController), model: LEARNING_MODEL } });
   }
   private async update(): Promise<void> { await this.persist(); await this.publish(); }
   async setKey(): Promise<void> {
@@ -264,6 +277,15 @@ export class Board {
   private async handle(message: any): Promise<void> {
     if (!message || typeof message.type !== 'string') return;
     if (message.type === 'ready') { await this.publish(); return; }
+    if (message.type === 'learnStart') { await this.context.globalState.update('learnPausedByUser', false); await this.startLearning(typeof message.topic === 'string' ? message.topic : '', false); return; }
+    if (message.type === 'learnResume') { await this.context.globalState.update('learnPausedByUser', false); await this.startLearning(this.learningStatus?.topic || '', true); return; }
+    if (message.type === 'learnPause') {
+      // Honoured between Opus turns; the current tool step finishes and progress is kept.
+      // Remembered so automatic learning never restarts what the user stopped.
+      this.learningPaused = true; await this.context.globalState.update('learnPausedByUser', true);
+      if (this.learningStatus) this.learningStatus = { ...this.learningStatus, message: 'Đang dừng sau bước hiện tại…' };
+      await this.publish(); return;
+    }
     if (message.type === 'qaSend') { await this.askQa(message.text); return; }
     if (message.type === 'roleChatSend') { await this.askRole(message.roleId, message.sessionId, message.text); return; }
     if (message.type === 'roleChatStop') {
@@ -528,6 +550,66 @@ export class Board {
     }
     await this.update();
   }
+  /** CEO's own past work with the team: briefs, corrections/feedback and failed or blocked tasks. */
+  private learningHistory(): HistoryItem[] {
+    return this.sessions.filter(s => !s.demo).map(s => ({
+      id: s.id, at: s.createdAt, name: s.name.slice(0, 160), brief: s.brief.slice(0, 3000),
+      feedback: this.roleChats.filter(c => c.sessionId === s.id).flatMap(c => c.messages.filter(m => m.role === 'user').map(m => c.roleId + ': ' + m.text.slice(0, 700))).slice(-30),
+      problems: s.tasks.filter(t => t.error || t.status === 'blocked').map(t => t.title + ': ' + (t.error || 'blocked').slice(0, 500)).slice(-15)
+    })).filter(h => h.brief || h.feedback.length);
+  }
+
+  /**
+   * On startup Claude Opus 5 learns from the web/YouTube and past work: at most once per interval, only with a
+   * key, never while learning, and never against an explicit "Dừng học". A run interrupted by closing VS Code resumes.
+   */
+  async maybeAutoLearn(): Promise<string> {
+    const settings = vscode.workspace.getConfiguration('aeTeam');
+    if (!settings.get<boolean>('autoLearn', true)) return 'disabled';
+    if (this.learningController) return 'busy';
+    if (this.context.globalState.get<boolean>('learnPausedByUser', false)) return 'paused-by-user';
+    const hours = Math.max(1, settings.get<number>('autoLearnIntervalHours', 24));
+    const last = this.context.globalState.get<number>('learnLastAutoAt', 0);
+    const interrupted = this.learningStatus?.state === 'paused';
+    if (!interrupted && Date.now() - last < hours * 3600000) return 'recent';
+    if (!(await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY)) return 'no-key';
+    await this.context.globalState.update('learnLastAutoAt', Date.now());
+    // Each automatic run studies the next After Effects animation topic, so coverage grows over the days.
+    const topic = interrupted ? this.learningStatus!.topic : nextAnimationTopic(this.context.globalState.get<string>('learnLastTopic', ''));
+    if (!interrupted) await this.context.globalState.update('learnLastTopic', topic);
+    try { await this.startLearning(topic, interrupted); return interrupted ? 'resumed' : 'started'; }
+    catch { return 'failed'; }
+  }
+
+  private async startLearning(topic: string, resume: boolean): Promise<void> {
+    if (this.learningController) throw new Error('Đang học. Bấm Dừng học trước khi bắt đầu lại.');
+    topic = topic.replace(/\s+/g, ' ').trim().slice(0, 200);
+    const key = await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY || '';
+    if (!key) throw new Error('Chưa có API key cho Claude. Lưu key qua "AE_Team: Lưu API key" trước khi học.');
+    const controller = new AbortController();
+    this.learningController = controller; this.learningPaused = false;
+    const history = this.learningHistory();
+    const prompt = 'CHỦ ĐỀ CẦN HỌC: ' + (topic || 'After Effects animation tổng quát: kỹ thuật chuyển động hữu ích cho đội') +
+      '\nLỊCH SỬ: ' + history.length + ' phiên làm việc của CEO với AE_Team (đọc bằng read_history).' +
+      (resume ? '\nĐây là lần TIẾP TỤC sau khi tạm dừng: phiên lịch sử đã đánh dấu học sẽ không trả lại; dùng recall_knowledge để không lưu trùng.' : '');
+    const options = { baseUrl: this.config.anthropicBaseUrl, apiKey: key, model: LEARNING_MODEL, system: LEARNING_SYSTEM, prompt,
+      maxTokens: Math.max(8192, this.config.maxOutputTokens), tools: LEARNING_TOOLS, signal: controller.signal };
+    let conversation;
+    try {
+      conversation = new ClaudeCliConversation({ ...options, cwd: this.root,
+        executable: await findClaude(vscode.workspace.getConfiguration('aeTeam').get<string>('claudePath', '')) });
+    } catch { conversation = new GatewayConversation({ ...options, protocol: 'messages' }); }
+    this.learningStatus = { state: 'running', topic, phase: 'start', message: 'Đang khởi động Claude Opus 5…', percent: this.learningStatus?.percent || 0,
+      lessonsSaved: resume ? this.learningStatus?.lessonsSaved || 0 : 0, historyLearned: 0, historyTotal: history.length, updatedAt: Date.now() };
+    await this.publish();
+    // Runs in the background; the board follows progress through published status updates.
+    void runLearning({ topic, store: this.knowledge, history, conversation, signal: controller.signal,
+      isPaused: () => this.learningPaused,
+      onStatus: async status => { this.learningStatus = status; await this.publish(); } })
+      .catch(error => { this.learningStatus = { ...this.learningStatus!, state: 'failed', error: String(error?.message || error), updatedAt: Date.now() }; })
+      .finally(async () => { if (this.learningController === controller) this.learningController = undefined; await this.publish(); });
+  }
+
   private async runTask(session: Session, task: Task, controller: AbortController): Promise<void> {
     task.startedAt = Date.now(); task.attempts++; task.error = '';
     // Evidence belongs to one run: a fresh run never inherits checks or tool calls of an earlier one.
@@ -588,7 +670,8 @@ export class Board {
           (role.id === 'art' ? '\nLAYER EFFECT: khi cần hiệu ứng, gọi aect_library với từ khóa để lấy effect ĐÃ CÀI (matchName chính xác), aect_schema schema layer.solid.create/effect.add, rồi aect_propose_plan tạo layer (adjustment/solid) và effect.add bằng matchName đó. Chỉ dùng effect có trong inventory, không bịa tên.' : '') +
           (delegates ? '\nẢNH: mọi yêu cầu tạo ảnh/hình/poster/chữ dạng ảnh giao NGAY cho Mỹ thuật & Tạo ảnh (roleId=art): vị trí này tạo PNG bằng skill iw-imagegen rồi import vào AE. Không tự dựng ảnh bằng text/shape layer và không giao kỹ sư khác dựng layer, trừ khi CEO nói rõ muốn layer.' : '') +
           '\nVai trò: ' + role.name + '. ' + role.systemPrompt,
-        prompt: prompt + toolboxNote,
+        // Lessons learned by Claude Opus 5 (Học AE) that match this request.
+        prompt: prompt + toolboxNote + await knowledgeBlock(this.knowledge, session.brief + ' ' + task.title + ' ' + task.prompt, session.name),
         maxTokens: this.config.maxOutputTokens, tools: [...TOOLS, ...AE_TOOLS, ...TEAM_TOOLS, ...TOOLBOX_TOOLS, ...(role.id === 'art' ? [REQUEST_IMAGE_TOOL] : [])].filter(t =>
           !(['delegate_task', 'inspect_proposal', 'read_subagent_result'].includes(t.name) && !delegates) &&
           !(['list_skills', 'read_skill'].includes(t.name) && !hasSkills) &&

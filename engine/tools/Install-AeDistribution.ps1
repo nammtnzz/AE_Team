@@ -14,6 +14,8 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Unicode user/install paths must survive child PowerShell output on non-UTF-8 consoles.
+$OutputEncoding = [Text.UTF8Encoding]::new($false); try { [Console]::OutputEncoding = $OutputEncoding } catch { }
 $utf8 = [Text.UTF8Encoding]::new($false)
 $payloadRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $installLock = $null
@@ -67,7 +69,7 @@ function Confirm-Payload([object]$Manifest, [string]$Root) {
             throw "Package verification failed: $($file.path). Extract a fresh copy of the package."
         }
     }
-    foreach ($required in @('jsx/AECT Engine.jsx','tools/AeBridgePanel.js','tools/AeBridgeStartup.js','tools/Validate-AeBridgeInstallation.ps1','tools/Build-AeScriptBundle.js','tools/AeFunctionsMcp.js','tools/Install-AeFunctionsMcp.ps1','tools/AeCodexConfig.js','tools/Initialize-AeLibrary.ps1','tools/AeBackgroundLauncher.cs','tools/AeBackgroundServiceLifecycle.ps1','.ae-codex/functions/catalog.json','.ae-codex/functions/capabilities.json','source/scripts.json','source/script-inventory.json')) {
+    foreach ($required in @('jsx/AECT Engine.jsx','tools/AeFunctionsMcpLauncher.js','tools/Invoke-AeRetention.ps1','tools/AeBridgePanel.js','tools/AeBridgeStartup.js','tools/Validate-AeBridgeInstallation.ps1','tools/Build-AeScriptBundle.js','tools/AeFunctionsMcp.js','tools/Install-AeFunctionsMcp.ps1','tools/AeCodexConfig.js','tools/Initialize-AeLibrary.ps1','tools/AeBackgroundLauncher.cs','tools/AeBackgroundServiceLifecycle.ps1','.ae-codex/functions/catalog.json','.ae-codex/functions/capabilities.json','source/scripts.json','source/script-inventory.json')) {
         if (-not $seen.ContainsKey($required)) { throw "Package manifest is incomplete: $required" }
     }
 }
@@ -267,7 +269,12 @@ try {
     else {
         try {
             Write-SetupProgress 'Linking tools to this Windows user''s Codex configuration. Codex CLI is not required.'
-            $registration = & (Join-Path $runtimeRoot 'tools/Install-AeFunctionsMcp.ps1') | ConvertFrom-Json
+            # Codex points at this fixed launcher; it follows installation.json and the live AE panel,
+            # so later upgrades and old-version cleanup cannot break the connection.
+            $stableServerPath = Join-Path $InstallRoot 'AeFunctionsMcp.js'
+            Assert-PlainPath $stableServerPath
+            Write-AtomicText $stableServerPath ([IO.File]::ReadAllText((Join-Path $runtimeRoot 'tools/AeFunctionsMcpLauncher.js')))
+            $registration = & (Join-Path $runtimeRoot 'tools/Install-AeFunctionsMcp.ps1') -StableServerPath $stableServerPath | ConvertFrom-Json
             if ($registration.state -cne 'success' -or -not $registration.registered) { throw 'Codex configuration was not registered.' }
             $mcpState = 'configured'
             $mcpConfigPath = $registration.configPath

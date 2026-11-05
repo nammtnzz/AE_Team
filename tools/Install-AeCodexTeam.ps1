@@ -18,6 +18,8 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Unicode user/install paths must survive child PowerShell output on non-UTF-8 consoles.
+$OutputEncoding = [Text.UTF8Encoding]::new($false); try { [Console]::OutputEncoding = $OutputEncoding } catch { }
 . (Join-Path $PSScriptRoot 'TeamMaintenance.ps1')
 $packageRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $utf8 = [Text.UTF8Encoding]::new($false)
@@ -155,6 +157,11 @@ try {
     elseif ($prior -and $prior.PSObject.Properties['teamVersion']) { $installedMetadata | Add-Member -NotePropertyName teamVersion -NotePropertyValue $prior.teamVersion -Force }
     [IO.File]::WriteAllText($metadataPath,($installedMetadata | ConvertTo-Json -Depth 6),$utf8)
     $cleanup = if ($Fixture -or $backend.mcpState -eq 'configured') { Remove-TeamOldVersions $InstallRoot -Fixture:$Fixture } else { @{removed=@();deferred=@('MCP registration needs repair; old versions preserved');preservedData=@()} }
+    # Daily hidden retention: generated data and archives older than 10 days age out so disk use stays bounded.
+    if (-not $Fixture) {
+        $retention = Join-Path ([string]$installedMetadata.runtimeRoot) 'tools/Invoke-AeRetention.ps1'
+        if ([IO.File]::Exists($retention)) { try { & $retention -Register -InstallRoot $InstallRoot -Days 10 | Out-Null } catch { } }
+    }
     # Free the shared names (Codex Bridge loaders, ae_functions, CodexAE.Background) with the old runtime's own
     # verified uninstaller: it backs up program files and keeps all data. On failure the new install stays valid
     # and the next run retries; nothing AE-related is replayed.

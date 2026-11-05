@@ -6,7 +6,7 @@ $OutputDirectory=[IO.Path]::GetFullPath($OutputDirectory)
 [IO.Directory]::CreateDirectory($OutputDirectory) | Out-Null
 $build=& node (Join-Path $PSScriptRoot 'build-release.cjs') | ConvertFrom-Json
 if($LASTEXITCODE -ne 0){throw 'Payload build failed'}
-$privacy=& pwsh -NoProfile -File (Join-Path $PSScriptRoot 'Verify-ReleasePrivacy.ps1') -PayloadRoot $build.payload | ConvertFrom-Json
+$privacy=& (Get-Process -Id $PID).Path -NoProfile -File (Join-Path $PSScriptRoot 'Verify-ReleasePrivacy.ps1') -PayloadRoot $build.payload | ConvertFrom-Json
 if($LASTEXITCODE -ne 0 -or $privacy.state -cne 'success'){throw 'Release privacy validation failed; installer was not built'}
 $zip=Join-Path $build.stage 'payload.zip'
 Add-Type -AssemblyName System.IO.Compression.FileSystem

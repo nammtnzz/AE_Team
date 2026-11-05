@@ -291,7 +291,7 @@ test('provider changes filter model choices, incorporate gateway IDs and save cu
   doc.getElementById('configBtn').click();
   const row = doc.querySelector('[data-role-id="lead"]');
   const protocol = row.querySelector('[data-field="protocol"]'), model = row.querySelector('[data-field="model"]');
-  assert.ok([...model.options].some(o => o.value === 'claude-haiku-5.5'));
+  assert.ok([...model.options].some(o => o.value === 'claude-haiku-5-5'));
   assert.ok(![...model.options].some(o => /^gpt-/.test(o.value)));
   update({ type: 'models', models: ['claude-custom', 'gpt-custom', 'gpt-image-secret', '<img src=x>'] });
   assert.ok([...model.options].some(o => o.value === 'claude-custom'));
@@ -324,7 +324,7 @@ test('image generation stays explicit and QA card opens its chat directly with t
   doc.querySelector('#detail [data-role-chat-form]').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
   assert.deepEqual(JSON.parse(JSON.stringify(messages.at(-1))), { type: 'roleChatSend', roleId: 'qa', sessionId: state.selectedId, text: 'Tôi muốn thay màu' });
   state.chatBusy = [{ roleId: 'qa', sessionId: state.selectedId }];
-  state.roleChats = [{ roleId: 'qa', sessionId: state.selectedId, messages: [{ role: 'assistant', model: 'claude-haiku-5.5', text: '<img src=x onerror=boom>' }] }]; update(state);
+  state.roleChats = [{ roleId: 'qa', sessionId: state.selectedId, messages: [{ role: 'assistant', model: 'claude-haiku-5-5', text: '<img src=x onerror=boom>' }] }]; update(state);
   assert.equal(doc.querySelectorAll('#detail .role-chat-messages img').length, 0);
   assert.ok(doc.querySelector('#detail .role-chat-messages').textContent.includes('<img'));
   assert.equal(doc.querySelector('#detail [type="submit"]').disabled, true);
@@ -572,4 +572,23 @@ test('Tạo ảnh is merged into Mỹ thuật & Tạo ảnh: no separate card, a
   assert.equal(doc.querySelector('.role-card[data-id="art"] .work-indicator').dataset.work, 'running');
   doc.querySelector('.role-card[data-id="art"]').click();
   assert.ok(doc.querySelector('#detail [data-action="openImage"]'));
+});
+
+test('Học AE strip starts with a topic, pauses, resumes and shows Claude Opus 5 progress', t => {
+  const { dom, doc, update, state, messages } = setup(); t.after(() => dom.window.close());
+  assert.equal(doc.getElementById('learnModel').textContent, 'claude-opus-5');
+  assert.equal(doc.getElementById('learnPauseBtn').disabled, true);
+  doc.getElementById('learnTopic').value = ' smear frames ';
+  doc.getElementById('learnStartBtn').click();
+  assert.deepEqual(JSON.parse(JSON.stringify(messages.at(-1))), { type: 'learnStart', topic: 'smear frames' });
+  update({ ...state, learning: { busy: true, model: 'claude-opus-5', status: { state: 'running', topic: 'smear frames', percent: 45, lessonsSaved: 3, historyLearned: 9, historyTotal: 20, message: 'Đọc yêu cầu cũ' } } });
+  assert.equal(doc.getElementById('learnBar').value, 45);
+  assert.match(doc.getElementById('learnStatus').textContent, /Đang học · 45% · 3 bài · lịch sử 9\/20/);
+  assert.equal(doc.getElementById('learnStartBtn').disabled, true);
+  doc.getElementById('learnPauseBtn').click();
+  assert.equal(messages.at(-1).type, 'learnPause');
+  update({ ...state, learning: { busy: false, model: 'claude-opus-5', status: { state: 'paused', topic: 'smear frames', percent: 45, lessonsSaved: 3, historyLearned: 9, historyTotal: 20, message: 'Đã dừng' } } });
+  assert.equal(doc.getElementById('learnStartBtn').textContent, 'Tiếp tục');
+  doc.getElementById('learnStartBtn').click();
+  assert.equal(messages.at(-1).type, 'learnResume');
 });

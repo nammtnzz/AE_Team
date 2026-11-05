@@ -23,7 +23,7 @@ test('preset has nine roles with a dedicated image skill and intake QA', () => {
   assert.equal(config.roles.filter(r => r.model === 'claude-sonnet-5').length, 3);
   assert.equal(config.roles.filter(r => r.protocol === 'responses').length, 2);
   assert.deepEqual(config.roles.filter(r => r.model.includes('image')).map(r => r.id), ['image']);
-  assert.equal(config.roles.find(r => r.id === 'qa').model, 'claude-haiku-5.5');
+  assert.equal(config.roles.find(r => r.id === 'qa').model, 'claude-haiku-5-5');
 });
 test('config rejects invalid roles, protocols and credential-bearing URLs; drops imported secrets', () => {
   const config = defaultConfig();
@@ -60,6 +60,11 @@ test('demo is explicitly marked and has no fabricated API metrics', () => {
   assert.ok(session.tasks.filter(t => t.result).every(t => t.result.includes('DEMO')));
 });
 
+test('saved configs with the invalid claude-haiku-5.5 ID move to claude-haiku-5-5', () => {
+  const saved = defaultConfig(); saved.roles.find(r => r.id === 'qa').model = 'claude-haiku-5.5';
+  assert.equal(upgradeConfig(saved).roles.find(r => r.id === 'qa').model, 'claude-haiku-5-5');
+});
+
 test('seven-role configs gain image and intake QA without losing custom settings', () => {
   const old = defaultConfig(); old.roles = old.roles.slice(0, 7);
   old.roles[0].model = 'custom-opus'; old.roles[0].systemPrompt = 'My custom prompt';
@@ -67,7 +72,7 @@ test('seven-role configs gain image and intake QA without losing custom settings
   assert.equal(upgraded.roles.length, 9);
   assert.deepEqual(upgraded.roles.slice(0, 7), old.roles);
   assert.equal(upgraded.roles[7].protocol, 'iw-imagegen');
-  assert.equal(upgraded.roles[8].model, 'claude-haiku-5.5');
+  assert.equal(upgraded.roles[8].model, 'claude-haiku-5-5');
   assert.deepEqual(upgradeConfig(upgraded), upgraded);
   const bad = defaultConfig(); bad.roles[7].protocol = 'responses';
   assert.throws(() => validateConfig(bad), /iw-imagegen/);

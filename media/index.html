@@ -20,6 +20,7 @@
       <div class="connection"><span id="connectionDot" class="dot warning"></span><span id="connectionLabel">Chưa cấu hình gateway</span><button id="newBtn" class="new-button">＋ Phiên mới</button></div>
     </section>
     <section class="ae-strip"><span class="ae-logo">Ae</span><div><strong>AE_Team</strong><small id="aeStripStatus">Bảng việc, model và công cụ AE trong một nơi</small></div><button id="aeOpenBtn">Công cụ After Effects ↗</button></section>
+    <section class="learn-strip" id="learnStrip"><span class="ae-logo">Học</span><div class="learn-info"><strong>Học AE · <span id="learnModel">claude-opus-5</span></strong><small id="learnStatus">Chưa học. Nhập chủ đề (hoặc để trống) rồi bấm Học AE.</small><progress id="learnBar" max="100" value="0"></progress></div><input id="learnTopic" maxlength="200" placeholder="Chủ đề (để trống = tổng quát)"><button id="learnStartBtn">Học AE</button><button id="learnPauseBtn" disabled>Dừng học</button></section>
     <section class="brief-panel" id="briefPanel">
       <div class="brief-label"><span class="section-number">01</span><div><strong>CEO → PO · Giao việc</strong><small>Mô tả mục tiêu, team sẽ chia thành các bước thực hiện.</small></div></div>
       <div class="brief-input"><textarea id="brief" rows="2" placeholder="Ví dụ: Tạo motion poster 10 giây, 1080 × 1920, chữ chuyển động, camera và glow nhẹ; dùng asset đang có…"></textarea><button id="createBtn" class="primary">Tạo phiên <span>↗</span></button></div>

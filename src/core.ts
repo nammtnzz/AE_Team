@@ -10,7 +10,7 @@ export interface ImageWork {
   sessionId: string; status: 'running' | 'done' | 'failed' | 'stopped'; at: number; error?: string;
 }
 export const MODEL_PRESETS = {
-  claude: ['claude-opus-5-5', 'claude-sonnet-5', 'claude-haiku-5.5'],
+  claude: ['claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5', 'claude-haiku-5-5'],
   codex: ['gpt-6.1-sol'], image: ['gpt-image-2.5-sunburst']
 };
 export type Status = 'assigned' | 'running' | 'review' | 'approved' | 'blocked';
@@ -90,7 +90,7 @@ export function defaultConfig(): TeamConfig {
         'Review độc lập và chỉ đọc; không propose_file/aect_propose_plan. Kiểm tra missing footage/font, timing, frame bounds, readability, output settings và plugin support. Chỉ render khi yêu cầu cho phép. Ghi bằng chứng, bước tái hiện và giới hạn kiểm thử; không gọi plan chưa chạy là đã tích hợp.'),
       make('image', 'Tạo ảnh', 'Codex skill · iw-imagegen', '#77cbd1', 'gpt-image-2.5-sunburst', 'iw-imagegen',
         'Tạo raster qua skill Codex iw-imagegen đã cài local, dùng scripts/image_gen.py và model ảnh riêng. Lưu asset trong workspace; chỉ báo thành công khi có file thật. Không dùng model hội thoại để tạo ảnh.'),
-      make('qa', 'QA tiếp nhận ý kiến', 'Câu hỏi & góp ý của bạn', '#f0b78e', 'claude-haiku-5.5', 'claude-cli',
+      make('qa', 'QA tiếp nhận ý kiến', 'Câu hỏi & góp ý của bạn', '#f0b78e', 'claude-haiku-5-5', 'claude-cli',
         'Tiếp nhận ý kiến, phản hồi và câu hỏi trực tiếp của người dùng. Trả lời tiếng Việt rõ ràng; ghi nhận yêu cầu chỉnh sửa và tiêu chí mong muốn. Dựa vào lịch sử hội thoại và trạng thái phiên để giải đáp. Hỏi lại khi thiếu thông tin thiết yếu. Không tự sửa project, giao việc, gọi công cụ hoặc nói đã thực hiện thay đổi. Phân biệt góp ý mới với kết quả đã có bằng chứng.')
     ]
   };
@@ -159,6 +159,8 @@ function validatePrices(value: unknown): Record<string, Price> {
 // Retain model routes when upgrading the old bundled Unity preset.
 export function upgradeConfig(value: unknown): TeamConfig {
   const old = validateConfig(value);
+  // 'claude-haiku-5.5' was never a valid model ID; saved configs move to the real one.
+  old.roles = old.roles.map(role => role.model === 'claude-haiku-5.5' ? { ...role, model: 'claude-haiku-5-5' } : role);
   if (!/Unity|Level Production/i.test(old.name)) {
     const defaults = defaultConfig();
     const priorNames = ["Điều phối","Technical Director","Animation","Layout / Camera","Compositing / FX","Art director","Render / QA"];

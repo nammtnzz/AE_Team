@@ -67,6 +67,17 @@
           "default": true,
           "description": "Mở bảng khi workspace có .ae-team/team.json."
         },
+        "aeTeam.autoLearn": {
+          "type": "boolean",
+          "default": true,
+          "description": "Khi mở VS Code, Claude Opus 5 tự học kỹ thuật After Effects từ web/YouTube và lịch sử làm việc (tốn phí model; tối đa một lần mỗi khoảng aeTeam.autoLearnIntervalHours). Không tự chạy lại nếu bạn đã bấm Dừng học."
+        },
+        "aeTeam.autoLearnIntervalHours": {
+          "type": "number",
+          "default": 24,
+          "minimum": 1,
+          "description": "Khoảng cách tối thiểu (giờ) giữa hai lần tự học."
+        },
         "aeTeam.claudePath": {
           "type": "string",
           "scope": "machine",

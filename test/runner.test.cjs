@@ -16,7 +16,9 @@ async function waitFor(predicate, message) {
 }
 async function setup(t, fetcher, settings = {}, cli, dependencies = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'p0-runner-test-'));
-  const storage = new Map(); const secrets = new Map([['gatewayKey', 'mock-api-key']]);
+  const storage = new Map(); const globalStore = new Map(); const secrets = new Map([['gatewayKey', 'mock-api-key']]);
+  // Learned knowledge of a test never touches the real per-user store.
+  process.env.AECT_KNOWLEDGE_DIR = path.join(root, 'knowledge');
   const fakeVscode = {
     workspace: {
       workspaceFolders: [{ name: 'Fixture', uri: { scheme: 'file', fsPath: root } }],
@@ -34,7 +36,8 @@ async function setup(t, fetcher, settings = {}, cli, dependencies = {}) {
   extensionModule._compile(source, location);
   const context = { globalStorageUri: { fsPath: path.join(root, ".globalStorage") }, subscriptions: [], workspaceState: { get: (key, fallback) => storage.get(key) ?? fallback,
     update: async (key, value) => storage.set(key, JSON.parse(JSON.stringify(value))) },
-    secrets: { get: async key => secrets.get(key), store: async (key, value) => secrets.set(key, value) } };
+    globalState: { get: (key, fallback) => globalStore.get(key) ?? fallback, update: async (key, value) => globalStore.set(key, value) },
+    secrets: { get: async key => secrets.get(key), store: async (key, value) => secrets.set(key, value), delete: async key => secrets.delete(key) } };
   const board = new extensionModule.exports.Board(context);
   const originalFetch = global.fetch;
   global.fetch = fetcher;
@@ -47,7 +50,7 @@ async function setup(t, fetcher, settings = {}, cli, dependencies = {}) {
   });
   board.config = { ...defaultConfig(), openaiBaseUrl: 'https://mock.invalid/v1', anthropicBaseUrl: 'https://mock.invalid/v1',
     maxParallel: 2, roles: defaultConfig().roles.map(r => ({ ...r, protocol: 'responses' })) };
-  return { board, root, storage, context, Board: extensionModule.exports.Board };
+  return { board, root, storage, global: globalStore, secrets, context, Board: extensionModule.exports.Board };
 }
 const done = () => Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: 'Verified handoff, no file changes.' }] }],
   usage: { input_tokens: 10, output_tokens: 5 } });
@@ -314,7 +317,7 @@ test('intake QA uses exact Haiku ID via Claude CLI, no tools, retains feedback a
   await board.handle({ type: 'create', workflow: 'preset', brief: 'Motion poster' });
   await board.handle({ type: 'qaSend', text: 'Cho tôi màu xanh' });
   await board.handle({ type: 'qaSend', text: 'Có thể đổi font không?' });
-  assert.equal(calls.length, 2); assert.equal(calls[0].model, 'claude-haiku-5.5');
+  assert.equal(calls.length, 2); assert.equal(calls[0].model, 'claude-haiku-5-5');
   assert.deepEqual(calls[0].tools, []);
   assert.match(calls[1].prompt, /Cho tôi màu xanh/); assert.match(calls[1].prompt, /Motion poster/);
   assert.equal(storage.get('qaMessages').length, 4);
@@ -838,4 +841,39 @@ test('an Opus safety-filter false positive retries the task once with Sonnet, th
   assert.deepEqual(models, ['claude-opus-5-5', 'claude-sonnet-5']);
   assert.equal(out.status, 'approved'); assert.equal(out.model, 'claude-sonnet-5');
   assert.ok(session.events.some(e => /chặn nhầm/.test(e.text)));
+});
+
+const learningCli = turns => ({ findClaude: async () => 'claude.exe', ClaudeCliConversation: class {
+  constructor(options) { learningCli.options = options; }
+  async turn() { const next = turns.shift() || { text: 'Đã học xong', calls: [] }; return { raw: {}, inputTokens: 1, outputTokens: 1, text: next.text || '', calls: next.calls || [] }; }
+  toolResults() {} } });
+
+test('automatic learning on startup uses Claude Opus 5 on the next AE animation topic, once per interval', async t => {
+  const cli = learningCli([{ calls: [{ id: 'a', name: 'save_lesson', arguments: { title: 'Overshoot', lesson: 'Graph Editor: overshoot 110% rồi về 100% trong 4 frame', kind: 'tip' } }] }]);
+  const { board, global } = await setup(t, async () => done(), {}, cli);
+  await board.initialize();
+  assert.equal(await board.maybeAutoLearn(), 'started');
+  assert.equal(learningCli.options.model, 'claude-opus-5');
+  assert.match(learningCli.options.prompt, /easing và Graph Editor/);
+  assert.match(learningCli.options.system, /chỉ học về After Effects animation/);
+  await waitFor(() => board.learningStatus?.state === 'done', 'learning finishes');
+  assert.equal(board.learningStatus.lessonsSaved, 1);
+  await waitFor(() => !board.learningController, 'first run released');
+  assert.equal(await board.maybeAutoLearn(), 'recent', 'at most once per interval');
+  global.set('learnLastAutoAt', 0);
+  assert.equal(await board.maybeAutoLearn(), 'started');
+  assert.match(learningCli.options.prompt, /text animation/, 'the next run studies the next animation topic');
+  await waitFor(() => !board.learningController, 'second run finishes');
+});
+
+test('automatic learning respects the setting, a missing key and an explicit Dừng học', async t => {
+  const first = await setup(t, async () => done(), { autoLearn: false }, learningCli([]));
+  await first.board.initialize();
+  assert.equal(await first.board.maybeAutoLearn(), 'disabled');
+  const second = await setup(t, async () => done(), {}, learningCli([]));
+  await second.board.initialize();
+  second.secrets.delete('gatewayKey'); const saved = process.env.ANTHROPIC_API_KEY; delete process.env.ANTHROPIC_API_KEY;
+  try { assert.equal(await second.board.maybeAutoLearn(), 'no-key'); } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
+  second.global.set('learnPausedByUser', true);
+  assert.equal(await second.board.maybeAutoLearn(), 'paused-by-user');
 });
