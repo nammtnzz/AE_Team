@@ -603,7 +603,7 @@ export class Board {
     if (this.learningController) throw new Error('Đang học. Bấm Dừng học trước khi bắt đầu lại.');
     topic = topic.replace(/\s+/g, ' ').trim().slice(0, 200);
     const auth = await this.learningAuth();
-    if (!auth) throw new Error('Chưa có cách gọi Claude: đăng nhập Claude Code trong VS Code (tài khoản Claude) hoặc lưu API key qua "AE_Team: Lưu API key".');
+    if (!auth) throw new Error('Chưa có cách gọi Claude: cấu hình API/gateway cho Claude Code (~/.claude/settings.json), lưu API key qua "AE_Team: Lưu API key", hoặc đăng nhập Claude CLI.');
     const key = auth === 'account' ? '' : auth;
     const controller = new AbortController();
     this.learningController = controller; this.learningPaused = false;

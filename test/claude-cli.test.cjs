@@ -1,6 +1,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { parseCliOutput, CLI_SCHEMA } = require('../dist/claude-cli');
+// Never read the real ~/.claude/settings.json in tests: point the CLI bridge at an empty home.
+const claudeHome = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'aect-claude-home-'));
+process.env.AECT_CLAUDE_HOME = claudeHome;
 const tools = [{ name: 'read_file', description: 'Read', parameters: { type: 'object' } }];
 test('official CLI bridge validates structured output and maps custom tool calls', () => {
   const result = parseCliOutput(JSON.stringify({
@@ -66,4 +69,23 @@ test('claudeAccountReady reads the signed-in state from `claude auth status`', a
   assert.equal(await loadWithFakeSpawn('{"loggedIn":true,"authMethod":"oauth_token"}').api.claudeAccountReady('claude.exe'), true);
   assert.equal(await loadWithFakeSpawn('{"loggedIn":false}').api.claudeAccountReady('claude.exe'), false);
   assert.equal(await loadWithFakeSpawn('not json').api.claudeAccountReady('claude.exe'), false);
+});
+
+test('without an AE_Team key the CLI reuses the API/gateway configured for Claude Code', async () => {
+  const fs = require('node:fs'), path = require('node:path');
+  fs.mkdirSync(path.join(claudeHome, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(claudeHome, '.claude', 'settings.json'), JSON.stringify({ env: {
+    ANTHROPIC_BASE_URL: 'https://llmproxy.example/', ANTHROPIC_AUTH_TOKEN: 'gateway-token-123', ANTHROPIC_DEFAULT_OPUS_MODEL: 'x', OTHER: 'ignored' } }));
+  try {
+    const { api, launches } = loadWithFakeSpawn(answer);
+    await new api.ClaudeCliConversation(options('')).turn();
+    assert.equal(launches[0].env.ANTHROPIC_BASE_URL, 'https://llmproxy.example/');
+    assert.equal(launches[0].env.ANTHROPIC_AUTH_TOKEN, 'gateway-token-123');
+    assert.equal(launches[0].env.OTHER, undefined, 'only connection values pass through --restricted');
+    assert.ok(!launches[0].args.includes('--bare') && launches[0].args.includes('--restricted'));
+    assert.equal(await api.claudeAccountReady('claude.exe'), true, 'a configured gateway counts as connected');
+    const failing = loadWithFakeSpawn(JSON.stringify({ is_error: true, result: 'bad token gateway-token-123' }));
+    const conversation = new failing.api.ClaudeCliConversation(options(''));
+    await assert.rejects(conversation.turn(), error => !error.message.includes('gateway-token-123'));
+  } finally { fs.rmSync(path.join(claudeHome, '.claude'), { recursive: true, force: true }); }
 });
