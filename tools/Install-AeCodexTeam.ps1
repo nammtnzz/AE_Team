@@ -186,7 +186,7 @@ try {
     if (-not $SkipTeam) { $installedMetadata | Add-Member -NotePropertyName teamVersion -NotePropertyValue $product.version -Force }
     elseif ($prior -and $prior.PSObject.Properties['teamVersion']) { $installedMetadata | Add-Member -NotePropertyName teamVersion -NotePropertyValue $prior.teamVersion -Force }
     [IO.File]::WriteAllText($metadataPath,($installedMetadata | ConvertTo-Json -Depth 6),$utf8)
-    $cleanup = if ($Fixture -or $backend.mcpState -eq 'configured') { Remove-TeamOldVersions $InstallRoot -Fixture:$Fixture } else { @{removed=@();deferred=@('MCP registration needs repair; old versions preserved');preservedData=@()} }
+    $cleanup = if ($Fixture -or $backend.mcpState -in @('configured','disabled')) { Remove-TeamOldVersions $InstallRoot -Fixture:$Fixture } else { @{removed=@();deferred=@('MCP registration needs repair; old versions preserved');preservedData=@()} }
     # Daily hidden retention: generated data and archives older than 10 days age out so disk use stays bounded.
     if (-not $Fixture) {
         $retention = Join-Path ([string]$installedMetadata.runtimeRoot) 'tools/Invoke-AeRetention.ps1'
