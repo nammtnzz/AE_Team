@@ -4,6 +4,10 @@ $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $OutputDirectory=[IO.Path]::GetFullPath($OutputDirectory)
 [IO.Directory]::CreateDirectory($OutputDirectory) | Out-Null
+# Always rebuild and repackage the extension: build-release copies the VSIX at the repo root, and a stale VSIX
+# would ship old extension code inside a new installer.
+Push-Location $root
+try { & npm run package 2>&1 | Out-Null; if($LASTEXITCODE -ne 0){throw 'Extension compile/package failed; installer was not built'} } finally { Pop-Location }
 $build=& node (Join-Path $PSScriptRoot 'build-release.cjs') | ConvertFrom-Json
 if($LASTEXITCODE -ne 0){throw 'Payload build failed'}
 $privacy=& (Get-Process -Id $PID).Path -NoProfile -File (Join-Path $PSScriptRoot 'Verify-ReleasePrivacy.ps1') -PayloadRoot $build.payload | ConvertFrom-Json
