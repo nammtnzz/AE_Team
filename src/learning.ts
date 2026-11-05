@@ -94,6 +94,20 @@ function text(value: unknown, name: string, max: number, required: boolean): str
   return value.trim();
 }
 
+/** Keep this many daily snapshots of lessons.json in knowledge/backups (a few KB each). */
+export const KNOWLEDGE_BACKUPS = 60;
+/** Snapshot lessons.json once per day before it changes; older snapshots beyond the limit are pruned. */
+export async function backupKnowledge(dir: string, now = new Date()): Promise<string | undefined> {
+  const source = path.join(dir, 'lessons.json');
+  try { await fs.access(source); } catch { return undefined; }
+  const backups = path.join(dir, 'backups'); await fs.mkdir(backups, { recursive: true });
+  const target = path.join(backups, 'lessons-' + now.toISOString().slice(0, 10) + '.json');
+  try { await fs.copyFile(source, target, (await import('node:fs')).constants.COPYFILE_EXCL); } catch { /* today's snapshot exists */ }
+  const snapshots = (await fs.readdir(backups)).filter(n => /^lessons-\d{4}-\d{2}-\d{2}\.json$/.test(n)).sort();
+  for (const name of snapshots.slice(0, Math.max(0, snapshots.length - KNOWLEDGE_BACKUPS))) await fs.rm(path.join(backups, name), { force: true });
+  return target;
+}
+
 export class KnowledgeStore {
   constructor(readonly dir = knowledgeDir()) {}
   private get file() { return path.join(this.dir, 'lessons.json'); }
@@ -120,6 +134,7 @@ export class KnowledgeStore {
     else lessons.push(entry = { id: randomUUID().slice(0, 8), title, lesson, kind, tags: (tags as string[]).map(t => t.trim()), project, roles: [...new Set(roles as string[])],
       createdAt: now, updatedAt: now, confirmations: 1, source });
     if (lessons.length > MAX_LESSONS) { lessons.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)); lessons.length = MAX_LESSONS; }
+    await backupKnowledge(this.dir);
     await writeJson(this.file, { schema: 'codex-ae-knowledge/v1', lessons });
     return { id: entry.id, updated, total: lessons.length };
   }

@@ -64,6 +64,8 @@ $versionResult = $null
 
 function Remove-Old([System.IO.FileSystemInfo]$Item, [string]$Within) {
     if (-not (Test-IsChild $Item.FullName $Within) -or (Test-Linked $Item.FullName)) { return }
+    # Learned knowledge is only ever added to or edited; no retention rule may remove it.
+    if ($Item.FullName -match '[\\/]knowledge([\\/]|$)') { return }
     # A folder is old only when nothing inside it changed recently.
     $newest = $Item.LastWriteTimeUtc
     $bytes = [long]0

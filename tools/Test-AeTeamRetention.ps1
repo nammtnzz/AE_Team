@@ -20,6 +20,7 @@ try {
     Set-Content "$data/old-job/frame.npy" 'x'; Set-Content "$data/old-scratch.json" '{}'; Set-Content "$data/fresh-job/a.json" '{}'
     Set-Content "$data/library/catalog.json" '{}'; Set-Content "$data/bridge/heartbeat.json" '{}'
     New-Item -ItemType Junction -Path "$data/old-job/repo/node_modules" -Target $outside | Out-Null
+    New-Item -ItemType Directory -Force "$data/inspection/knowledge" | Out-Null; Set-Content "$data/inspection/knowledge/lessons.json" '{}'; Age "$data/inspection/knowledge" 30
     Age "$data/old-job" 30; Age "$data/old-scratch.json" 30; Age "$data/library" 30; Age "$data/bridge" 30
     Age "$data/releases/CodexAE-1.0.0-aaaaaaaaaaaa" 30; Age "$data/releases/CodexAE-1.0.1-bbbbbbbbbbbb" 20
     $preview = & $script -InstallRoot (Join-Path $root 'no-install') -WorkspaceRoots $ws -Days 10 -WhatIf | ConvertFrom-Json
@@ -29,6 +30,7 @@ try {
     Assert-Check (-not (Test-Path "$data/old-job") -and -not (Test-Path "$data/old-scratch.json")) 'Old job scratch (folders, JSON, NPY) outside the keep-list is removed.'
     Assert-Check (Test-Path "$outside/keep.txt") 'A junction inside scratch is unlinked; its target in another project is untouched.'
     Assert-Check (Test-Path "$data/fresh-job/a.json") 'Scratch newer than the age window is kept.'
+    Assert-Check (Test-Path "$data/inspection/knowledge/lessons.json") 'A knowledge folder is never removed, even when old and inside a pruned area.'
     Assert-Check ((Test-Path "$data/library/catalog.json") -and (Test-Path "$data/bridge/heartbeat.json")) 'Runtime keep-list folders are never removed as a whole.'
     Assert-Check ((Test-Path "$data/releases/CodexAE-1.0.1-bbbbbbbbbbbb") -and -not (Test-Path "$data/releases/CodexAE-1.0.0-aaaaaaaaaaaa")) 'Only the newest release build is kept.'
     [ordered]@{ schema = 'codex-ae-test/v1'; test = 'Test-AeRetention'; state = 'success'; checks = $checks } | ConvertTo-Json

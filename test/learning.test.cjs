@@ -126,3 +126,17 @@ test('learned knowledge reaches the engineers and QA, never PO', async () => {
   assert.match(await knowledgeBlock(store, 'text pop', '', { id: 'gameplay', name: 'Diễn hoạt' }), /Scale 110/);
   await assert.rejects(store.save({ title: 'x', lesson: 'y', roles: ['lead'] }), /roles chỉ gồm/, 'how-tos cannot be handed to PO');
 });
+
+test('the knowledge store is snapshotted daily before it changes; 60 snapshots are kept', async () => {
+  const { backupKnowledge, KNOWLEDGE_BACKUPS } = require('../dist/learning');
+  const dir = tmp(); const store = new KnowledgeStore(dir);
+  await store.save({ title: 'Easing overshoot', lesson: 'Bài một' });
+  assert.equal(fs.existsSync(path.join(dir, 'backups')), false, 'nothing to snapshot before the first lesson');
+  await store.save({ title: 'Trim paths reveal', lesson: 'Bài hai' });
+  const snapshots = fs.readdirSync(path.join(dir, 'backups'));
+  assert.equal(snapshots.length, 1); assert.match(snapshots[0], /^lessons-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'backups', snapshots[0]), 'utf8')).lessons.length, 1, 'snapshot holds the state before the change');
+  for (let day = 1; day <= KNOWLEDGE_BACKUPS + 5; day++) await backupKnowledge(dir, new Date(Date.UTC(2025, 0, day)));
+  assert.equal(fs.readdirSync(path.join(dir, 'backups')).length, KNOWLEDGE_BACKUPS);
+  assert.equal((await store.lessons()).length, 2, 'lessons themselves are never removed');
+});

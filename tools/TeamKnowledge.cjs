@@ -63,6 +63,13 @@ function mergeShared(sharedFile, knowledgeDir) {
     } else { existing.confirmations = Math.max(existing.confirmations || 1, item.confirmations || 1); kept++; }
   }
   if (lessons.length > MAX_LESSONS) { lessons.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))); lessons.length = MAX_LESSONS; }
+  if (added || updated) {
+    // Snapshot before a release changes this machine's lessons.
+    if (fs.existsSync(storeFile)) {
+      const backups = path.join(knowledgeDir, 'backups'); fs.mkdirSync(backups, { recursive: true });
+      fs.copyFileSync(storeFile, path.join(backups, 'lessons-before-install-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json'));
+    }
+  }
   if (added || updated || kept) writeJson(storeFile, { schema: 'codex-ae-knowledge/v1', lessons });
   return { added, updated, kept, total: lessons.length };
 }
