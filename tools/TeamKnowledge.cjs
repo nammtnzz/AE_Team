@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 const SCHEMA = 'aect-shared-lessons/v1';
 const KINDS = ['tip', 'fix', 'preference', 'project', 'avoid'];
-const ROLES = ['lead', 'architect', 'gameplay', 'camera_ui', 'sfx_vfx', 'art', 'reviewer'];
+const ROLES = ['architect', 'gameplay', 'camera_ui', 'sfx_vfx', 'art', 'reviewer'];
 const MAX_LESSONS = 2000;
 const SECRET = /(sk-[A-Za-z0-9_-]{16,}|api[_-]?key\s*[:=]|bearer\s+[A-Za-z0-9._-]{16,}|password\s*[:=]|access_token|refresh_token)/i;
 

@@ -116,3 +116,13 @@ test('learned how-tos are handed to the seat that does the work', async () => {
   assert.ok(LEARNING_TOOLS.find(t => t.name === 'save_lesson').parameters.properties.roles);
   assert.match(LEARNING_SYSTEM, /BÀN GIAO CÁCH LÀM/);
 });
+
+test('learned knowledge reaches the engineers and QA, never PO', async () => {
+  const store = new KnowledgeStore(tmp());
+  await store.save({ title: 'Text pop', lesson: '1. Scale 110→100%', kind: 'tip', roles: ['gameplay'] });
+  await store.save({ title: 'Text pop luôn đọc được', lesson: 'Giữ chữ trong safe area 90%', kind: 'preference' });
+  assert.equal(await knowledgeBlock(store, 'text pop', '', { id: 'lead', name: 'PO · Điều phối' }), '', 'PO receives nothing, not even shared lessons');
+  assert.match(await knowledgeBlock(store, 'text pop', '', { id: 'qa', name: 'QA tiếp nhận ý kiến' }), /safe area/);
+  assert.match(await knowledgeBlock(store, 'text pop', '', { id: 'gameplay', name: 'Diễn hoạt' }), /Scale 110/);
+  await assert.rejects(store.save({ title: 'x', lesson: 'y', roles: ['lead'] }), /roles chỉ gồm/, 'how-tos cannot be handed to PO');
+});
