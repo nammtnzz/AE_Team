@@ -52,7 +52,7 @@ test('3D scene updates correct head station after reordering; camera labels proj
   s.value.roles.reverse(); s.office.update(s.value); s.office.setActive(true); s.frame(100);
   const lead = s.host.querySelector('.office-label-lead');
   assert.ok(lead.textContent.includes('PO · Điều phối')); assert.ok(lead.getAttribute('aria-pressed') === 'true');
-  assert.equal(s.host.querySelectorAll('.office-label').length, 9);
+  assert.equal(s.host.querySelectorAll('.office-label').length, 10);
   for (const mode of ['iso', 'front', 'top']) {
     s.office.camera(mode); s.frame(200);
     for (const x of [-10, 10]) for (const z of [-9.5, 9.5]) {
@@ -102,7 +102,7 @@ test('GPU context loss cancels animation, reports recovery and does not restart 
 
 test('3D positions show actual work bars and chat/image work drives motion without repainting task screens', t => {
   const s = setup(); t.after(() => { s.office.dispose(); s.dom.window.close(); });
-  assert.equal(s.host.querySelectorAll('.office-work-indicator').length, 9);
+  assert.equal(s.host.querySelectorAll('.office-work-indicator').length, 10);
   const qaRole = s.value.roles.find(role => role.id === 'qa');
   const qa = [...s.host.querySelectorAll('.office-label')].find(label => label.querySelector('strong').textContent === qaRole.name);
   s.office.setActive(true); s.frame(100);

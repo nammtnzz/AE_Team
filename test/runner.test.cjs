@@ -232,6 +232,7 @@ test('session budget pauses before the next billed request; CEO can stop one eng
   const output = JSON.parse(await pending);
   assert.equal(output.status, 'blocked'); assert.match(output.error, /dừng riêng/); assert.equal(parentController.signal.aborted, false);
   board.config.roles.find(r => r.id === 'image').protocol = 'iw-imagegen'; // fixture sets every role to responses
+  board.config.roles.find(r => r.id === 'learn').protocol = 'claude-cli'; // the learning seat stays on Claude
   await board.handle({ type: 'setRoleModel', roleId: 'art', model: 'claude-sonnet-5' });
   assert.equal(board.config.roles.find(r => r.id === 'art').model, 'claude-sonnet-5');
   await assert.rejects(board.handle({ type: 'setRoleModel', roleId: 'image', model: 'x' }), /Tạo ảnh/);

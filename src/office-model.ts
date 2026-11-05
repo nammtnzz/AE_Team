@@ -10,7 +10,8 @@ export const OFFICE_SEATS = [
   { roleId: 'art', x: -4.6, z: 6.5, rotation: 0, head: false },
   { roleId: 'reviewer', x: 4.6, z: 6.5, rotation: 0, head: false },
   { roleId: 'image', x: -4.6, z: -5.7, rotation: 0, head: false },
-  { roleId: 'qa', x: 4.6, z: -5.7, rotation: 0, head: false }
+  { roleId: 'qa', x: 4.6, z: -5.7, rotation: 0, head: false },
+  { roleId: 'learn', x: -4.6, z: 10.65, rotation: 0, head: false }
 ] as const;
 
 export const OFFICE_STATUS = {

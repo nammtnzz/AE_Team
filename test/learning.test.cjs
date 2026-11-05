@@ -99,3 +99,20 @@ test('automatic topics stay within After Effects animation and rotate', () => {
   assert.match(LEARNING_SYSTEM, /chỉ học về After Effects animation/);
   assert.ok(LEARNING_SOURCES.some(s => /youtube\.com\/results/.test(s.url)), 'YouTube is a learning source');
 });
+
+test('learned how-tos are handed to the seat that does the work', async () => {
+  const store = new KnowledgeStore(tmp());
+  await store.save({ title: 'Text pop', lesson: '1. Scale 0→110→100% trong 6 frame\n2. Easy ease 80%', kind: 'tip', roles: ['gameplay'] });
+  await store.save({ title: 'Whoosh cho text pop', lesson: '1. Whoosh -6dB, lệch 2 frame trước keyframe', kind: 'tip', roles: ['sfx_vfx'] });
+  await store.save({ title: 'Text pop luôn đọc được', lesson: 'Giữ chữ trong safe area 90%', kind: 'preference' });
+  const animator = await knowledgeBlock(store, 'text pop', '', { id: 'gameplay', name: 'Diễn hoạt' });
+  assert.match(animator, /CÁCH LÀM ĐÃ HỌC CHO DIỄN HOẠT/);
+  assert.match(animator, /Scale 0→110→100%/); assert.match(animator, /safe area/, 'shared lessons reach every seat');
+  assert.doesNotMatch(animator, /Whoosh/, 'another seat\'s how-to stays out of this prompt');
+  const fx = await knowledgeBlock(store, 'text pop', '', { id: 'sfx_vfx', name: 'Hình ảnh & âm thanh' });
+  assert.match(fx, /Whoosh/); assert.doesNotMatch(fx, /Scale 0→110/);
+  await assert.rejects(store.save({ title: 'x', lesson: 'y', roles: ['qa'] }), /roles chỉ gồm/);
+  const { LEARNING_TOOLS, LEARNING_SYSTEM } = require('../dist/learning');
+  assert.ok(LEARNING_TOOLS.find(t => t.name === 'save_lesson').parameters.properties.roles);
+  assert.match(LEARNING_SYSTEM, /BÀN GIAO CÁCH LÀM/);
+});

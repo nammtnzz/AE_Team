@@ -322,7 +322,7 @@
     $('roleSettings').innerHTML = c.roles.map(role =>
       '<div class="role-setting role role-' + esc(role.id) + '" data-role-id="' + esc(role.id) + '"><div class="role-setting-grid">' +
       '<span class="setting-role">' + esc(role.name) + '</span><div class="model-picker"><select data-field="model" aria-label="Model ' + esc(role.name) + '"></select><input data-field="customModel" aria-label="ID model tùy chỉnh ' + esc(role.name) + '" placeholder="ID model từ gateway" hidden></div><select data-field="protocol" aria-label="Nhà cung cấp / giao thức ' + esc(role.name) + '">' +
-      (role.id === 'image' ? [['iw-imagegen', 'Codex skill · iw-imagegen']] : [['claude-cli', 'Claude · Code CLI'], ['messages', 'Claude · Messages'], ['responses', 'Codex · Responses'], ['chat', 'Codex · Chat Completions']]).map(([id, text]) =>
+      (role.id === 'image' ? [['iw-imagegen', 'Skill AE_Team · iw-imagegen']] : [['claude-cli', 'Claude · Code CLI'], ['messages', 'Claude · Messages'], ['responses', 'Codex · Responses'], ['chat', 'Codex · Chat Completions']]).map(([id, text]) =>
         '<option value="' + id + '"' + (role.protocol === id ? ' selected' : '') + '>' + text + '</option>').join('') +
       '</select></div><details><summary>Prompt vai trò</summary><textarea data-field="systemPrompt" rows="3">' +
       esc(role.systemPrompt) + '</textarea></details></div>').join('');

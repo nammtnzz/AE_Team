@@ -88,17 +88,19 @@ export function defaultConfig(): TeamConfig {
         'Mỹ thuật & Tạo ảnh (gộp Chỉ đạo mỹ thuật và Tạo ảnh). Khi CEO cần ẢNH (tạo ảnh, hình, poster, chữ dạng ảnh, nền, texture, sprite, concept): LUÔN tạo bằng skill iw-imagegen qua aect_request_image với prompt chi tiết (chủ thể, phong cách, màu, bố cục, nền/alpha), rồi import PNG vào AE bằng plan team.media.import + team.layer.media.add. KHÔNG dựng ảnh bằng text/shape/solid layer trừ khi CEO nói rõ muốn layer. Khi CEO yêu cầu layer: dựng layer/effect thật bằng plan, dùng effect có trong inventory. Ghi kích thước, alpha, color space.'),
       make('reviewer', 'Kiểm định & xuất phim', 'Chất lượng & bàn giao', '#96a8ff', 'gpt-6.1-sol', 'responses',
         'Review độc lập và chỉ đọc; không propose_file/aect_propose_plan. Kiểm tra missing footage/font, timing, frame bounds, readability, output settings và plugin support. Chỉ render khi yêu cầu cho phép. Ghi bằng chứng, bước tái hiện và giới hạn kiểm thử; không gọi plan chưa chạy là đã tích hợp.'),
-      make('image', 'Tạo ảnh', 'Codex skill · iw-imagegen', '#77cbd1', 'gpt-image-2.5-sunburst', 'iw-imagegen',
-        'Tạo raster qua skill Codex iw-imagegen đã cài local, dùng scripts/image_gen.py và model ảnh riêng. Lưu asset trong workspace; chỉ báo thành công khi có file thật. Không dùng model hội thoại để tạo ảnh.'),
+      make('image', 'Tạo ảnh', 'Skill AE_Team · iw-imagegen', '#77cbd1', 'gpt-image-2.5-sunburst', 'iw-imagegen',
+        'Tạo raster bằng skill iw-imagegen do AE_Team cài vào ~/.claude/skills (dùng scripts/image_gen.py, model ảnh riêng và .env của máy này). Lưu asset trong workspace; chỉ báo thành công khi có file thật. Không dùng model hội thoại để tạo ảnh.'),
       make('qa', 'QA tiếp nhận ý kiến', 'Câu hỏi & góp ý của bạn', '#f0b78e', 'claude-haiku-5-5', 'claude-cli',
-        'Tiếp nhận ý kiến, phản hồi và câu hỏi trực tiếp của người dùng. Trả lời tiếng Việt rõ ràng; ghi nhận yêu cầu chỉnh sửa và tiêu chí mong muốn. Dựa vào lịch sử hội thoại và trạng thái phiên để giải đáp. Hỏi lại khi thiếu thông tin thiết yếu. Không tự sửa project, giao việc, gọi công cụ hoặc nói đã thực hiện thay đổi. Phân biệt góp ý mới với kết quả đã có bằng chứng.')
+        'Tiếp nhận ý kiến, phản hồi và câu hỏi trực tiếp của người dùng. Trả lời tiếng Việt rõ ràng; ghi nhận yêu cầu chỉnh sửa và tiêu chí mong muốn. Dựa vào lịch sử hội thoại và trạng thái phiên để giải đáp. Hỏi lại khi thiếu thông tin thiết yếu. Không tự sửa project, giao việc, gọi công cụ hoặc nói đã thực hiện thay đổi. Phân biệt góp ý mới với kết quả đã có bằng chứng.'),
+      make('learn', 'Học tập', 'Tự học AE · web, YouTube, lịch sử', '#5fc99c', 'claude-opus-5', 'claude-cli',
+        'Vị trí Học tập: tự học kỹ thuật After Effects animation từ nguồn uy tín trên web, YouTube và lịch sử làm việc của CEO, rồi lưu bài học có thiết lập cụ thể để cả đội dùng lại. Chỉ chạy qua Học AE, không nhận việc dựng project.')
     ]
   };
 }
 
 export function validateConfig(value: unknown): TeamConfig {
   const x = value as TeamConfig;
-  if (!x || x.version !== 1 || !Array.isArray(x.roles) || ![7, 9].includes(x.roles.length)) throw new Error('Team cần 9 vai trò (hỗ trợ nâng cấp 7 vai trò cũ), version = 1.');
+  if (!x || x.version !== 1 || !Array.isArray(x.roles) || ![7, 9, 10].includes(x.roles.length)) throw new Error('Team cần 10 vai trò (hỗ trợ nâng cấp 7 hoặc 9 vai trò cũ), version = 1.');
   if (typeof x.name !== 'string' || x.name.length > 150) throw new Error('Tên team không hợp lệ.');
   const ids = new Set<string>();
   const expected = defaultConfig().roles.map(r => r.id);
@@ -111,6 +113,8 @@ export function validateConfig(value: unknown): TeamConfig {
     if (/^gpt-image-/i.test(role.model) && role.id !== 'image') throw new Error('Model ảnh chỉ dùng qua công cụ tạo ảnh, không dùng cho ghế agent.');
     if (!/^#[0-9a-f]{6}$/i.test(role.color)) throw new Error('Màu vai trò không hợp lệ.');
     if (!['responses', 'messages', 'chat', 'claude-cli', 'iw-imagegen'].includes(role.protocol)) throw new Error('Giao thức không hợp lệ.');
+    // Học AE drives Claude with learning tools, so the learning seat must stay on a Claude protocol.
+    if (role.id === 'learn' && !['claude-cli', 'messages'].includes(role.protocol)) throw new Error('Vai trò Học tập phải dùng Claude (claude-cli hoặc messages).');
     if ((role.id === 'image') !== (role.protocol === 'iw-imagegen') || (role.id === 'image' && role.model !== MODEL_PRESETS.image[0])) throw new Error('Vai trò Tạo ảnh phải dùng iw-imagegen và model ảnh riêng.');
   }
   for (const field of ['openaiBaseUrl', 'anthropicBaseUrl'] as const) {
@@ -120,7 +124,8 @@ export function validateConfig(value: unknown): TeamConfig {
       if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('Base URL không được chứa thông tin đăng nhập, query hoặc hash.');
     }
   }
-  if (x.roles.length === 7 && expected.slice(0, 7).some(id => !ids.has(id))) throw new Error('Thiếu vai trò cũ.');
+  // Older team sizes upgrade by appending roles: a 7- or 9-role config must hold exactly the roles of that era.
+  if (expected.slice(0, x.roles.length).some(id => !ids.has(id))) throw new Error('Thiếu vai trò cũ.');
   const roles = [...x.roles, ...defaultConfig().roles.filter(r => !ids.has(r.id))];
   if (!Number.isInteger(x.maxParallel) || x.maxParallel < 1 || x.maxParallel > 9) throw new Error('Số tác vụ song song phải từ 1 đến 9.');
   if (!Number.isInteger(x.maxOutputTokens) || x.maxOutputTokens < 256 || x.maxOutputTokens > 16384) throw new Error('Giới hạn output phải từ 256 đến 16384 token.');
@@ -161,6 +166,9 @@ export function upgradeConfig(value: unknown): TeamConfig {
   const old = validateConfig(value);
   // 'claude-haiku-5.5' was never a valid model ID; saved configs move to the real one.
   old.roles = old.roles.map(role => role.model === 'claude-haiku-5.5' ? { ...role, model: 'claude-haiku-5-5' } : role);
+  // The image seat now uses the skill AE_Team installs into ~/.claude/skills; refresh its untouched default text.
+  old.roles = old.roles.map(role => role.id === 'image' && role.shortName === 'Codex skill · iw-imagegen' ?
+    { ...role, shortName: 'Skill AE_Team · iw-imagegen', systemPrompt: defaultConfig().roles.find(r => r.id === 'image')!.systemPrompt } : role);
   if (!/Unity|Level Production/i.test(old.name)) {
     const defaults = defaultConfig();
     const priorNames = ["Điều phối","Technical Director","Animation","Layout / Camera","Compositing / FX","Art director","Render / QA"];

@@ -8,9 +8,9 @@ test('coordinator has a fixed head seat facing all eight workstations, regardles
   const seats = OFFICE_SEATS.map(seat => ({ ...seat, role: reordered.find(r => r.id === seat.roleId) }));
   const head = seats.find(s => s.head); const workers = seats.filter(s => !s.head);
   assert.equal(head.role.id, 'lead'); assert.equal(head.x, 0); assert.equal(head.rotation, Math.PI);
-  assert.equal(workers.length, 8); assert.ok(workers.every(s => s.z > head.z && s.rotation === 0));
+  assert.equal(workers.length, 9); assert.ok(workers.every(s => s.z > head.z && s.rotation === 0));
   assert.equal(new Set(workers.map(s => s.x)).size, 2);
-  assert.equal(new Set(workers.map(s => s.z)).size, 4);
+  assert.equal(new Set(workers.map(s => s.z)).size, 5);
 });
 
 test('real work animation only follows running tasks, and progress only counts approvals', () => {

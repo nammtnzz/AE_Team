@@ -28,7 +28,7 @@ test('every position has a work bar that switches from running to done before ap
   const task = session.tasks.find(item => item.roleId === 'gameplay');
   const bar = () => doc.querySelector('.role-card[data-id="gameplay"] .work-indicator');
   task.status = 'running'; update(state);
-  assert.equal(doc.querySelectorAll('.role-card .work-indicator').length, 8);
+  assert.equal(doc.querySelectorAll('.role-card .work-indicator').length, 9);
   assert.equal(bar().dataset.work, 'running'); assert.equal(bar().querySelector('.work-label').textContent, 'Đang xử lý');
   assert.equal(bar().querySelector('[role="progressbar"]').hasAttribute('aria-valuenow'), false);
   doc.querySelector('.role-card[data-id="gameplay"]').click();
@@ -52,7 +52,7 @@ test('Office roster, profile and renderer share the selected-session work state'
   t.after(() => dom.window.close());
   state.chatBusy = [{ roleId: 'qa', sessionId: state.selectedId }]; update(state);
   const rosterBar = () => doc.querySelector('.office-roster-seat[data-id="qa"] .work-indicator');
-  assert.equal(doc.querySelectorAll('.office-roster-seat .work-indicator').length, 8);
+  assert.equal(doc.querySelectorAll('.office-roster-seat .work-indicator').length, 9);
   assert.equal(rosterBar().dataset.work, 'running');
   assert.equal(doc.querySelector('.office-profile .work-indicator').dataset.work, 'running');
   assert.equal(updates.at(-1).workStatuses.qa.state, 'running');
@@ -93,9 +93,9 @@ test('stopped work stays incomplete and loading animations pause with panel and 
   assert.equal(doc.body.classList.contains('work-paused'), true);
 });
 
-test('board renders 9 roles, 5 columns, 9 tasks and explicit demo label', t => {
+test('board renders 10 roles, 5 columns, 9 tasks and explicit demo label', t => {
   const { dom, doc, messages } = setup(); t.after(() => dom.window.close());
-  assert.equal(doc.querySelectorAll('.role-card').length, 8);
+  assert.equal(doc.querySelectorAll('.role-card').length, 9);
   assert.match(doc.querySelectorAll('.role-specialty')[4].textContent, /FX · SFX/);
   assert.equal(doc.querySelectorAll('.column').length, 5);
   assert.equal(doc.querySelectorAll('.task').length, 9);
@@ -113,7 +113,7 @@ test('task detail, approval, view tabs and configuration send expected messages'
   assert.equal(doc.getElementById('statsView').hidden, false);
   assert.equal(doc.getElementById('boardView').hidden, true);
   doc.getElementById('configBtn').click();
-  assert.equal(doc.querySelectorAll('.role-setting').length, 9);
+  assert.equal(doc.querySelectorAll('.role-setting').length, 10);
   doc.getElementById('openaiUrl').value = 'https://example.com/v1';
   doc.getElementById('saveConfig').click();
   assert.equal(messages.at(-1).config.openaiBaseUrl, 'https://example.com/v1');
@@ -237,7 +237,7 @@ test('stats use reported usage and measured duration, and demo has no fabricated
   assert.deepEqual(values.slice(0, 3), ['3', '1.234', '432']);
   assert.ok(values.includes('1 phút 1 giây'));
   assert.ok(Number(doc.querySelector('.chart-input').getAttribute('width')) > 0);
-  assert.equal(doc.querySelectorAll('#statsView tbody tr').length, 9);
+  assert.equal(doc.querySelectorAll('#statsView tbody tr').length, 10);
 });
 
 test('Office mounts once, selects a role, restores camera and suspends when hidden', t => {
@@ -252,7 +252,7 @@ test('Office mounts once, selects a role, restores camera and suspends when hidd
   doc.getElementById('officeMotionBtn').click();
   assert.equal(calls.updates.at(-1).previewMotion, false);
   assert.equal(uiStates.at(-1).officePreview, false);
-  assert.equal(doc.querySelectorAll('.office-roster-seat').length, 8);
+  assert.equal(doc.querySelectorAll('.office-roster-seat').length, 9);
   assert.ok(doc.body.classList.contains('focus'));
   pick('art'); assert.equal(calls.updates.at(-1).selectedRole, 'art');
   assert.equal(uiStates.at(-1).officeRole, 'art');

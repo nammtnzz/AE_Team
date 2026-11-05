@@ -18,7 +18,7 @@ test('AE preset migration retains model routes and replaces the old Unity workfl
 
 test('preset has nine roles with a dedicated image skill and intake QA', () => {
   const config = validateConfig(defaultConfig());
-  assert.equal(new Set(config.roles.map(r => r.id)).size, 9);
+  assert.equal(new Set(config.roles.map(r => r.id)).size, 10);
   assert.equal(config.roles.filter(r => r.model === 'claude-opus-5-5').length, 2);
   assert.equal(config.roles.filter(r => r.model === 'claude-sonnet-5').length, 3);
   assert.equal(config.roles.filter(r => r.protocol === 'responses').length, 2);
@@ -69,13 +69,35 @@ test('seven-role configs gain image and intake QA without losing custom settings
   const old = defaultConfig(); old.roles = old.roles.slice(0, 7);
   old.roles[0].model = 'custom-opus'; old.roles[0].systemPrompt = 'My custom prompt';
   const upgraded = upgradeConfig(old);
-  assert.equal(upgraded.roles.length, 9);
+  assert.equal(upgraded.roles.length, 10);
   assert.deepEqual(upgraded.roles.slice(0, 7), old.roles);
   assert.equal(upgraded.roles[7].protocol, 'iw-imagegen');
   assert.equal(upgraded.roles[8].model, 'claude-haiku-5-5');
   assert.deepEqual(upgradeConfig(upgraded), upgraded);
   const bad = defaultConfig(); bad.roles[7].protocol = 'responses';
   assert.throws(() => validateConfig(bad), /iw-imagegen/);
-  const missing = defaultConfig(); missing.roles = missing.roles.slice(2);
+  const missing = defaultConfig(); missing.roles = missing.roles.slice(3); // 7 roles without the original PO/architect seats
   assert.throws(() => validateConfig(missing), /Thiếu vai trò/);
+});
+
+test('10th seat Học tập runs Claude Opus 5 and only on a Claude protocol; 9-role configs gain it', () => {
+  const config = defaultConfig(); const learn = config.roles.find(r => r.id === 'learn');
+  assert.equal(config.roles.length, 10); assert.equal(config.roles[9].id, 'learn');
+  assert.equal(learn.model, 'claude-opus-5'); assert.equal(learn.protocol, 'claude-cli');
+  assert.throws(() => validateConfig({ ...config, roles: config.roles.map(r => r.id === 'learn' ? { ...r, protocol: 'responses' } : r) }), /Học tập/);
+  const nine = defaultConfig(); nine.roles = nine.roles.slice(0, 9); nine.roles[0].model = 'custom-opus';
+  const upgraded = upgradeConfig(nine);
+  assert.equal(upgraded.roles.length, 10); assert.equal(upgraded.roles[0].model, 'custom-opus'); assert.equal(upgraded.roles[9].id, 'learn');
+  assert.throws(() => validateConfig({ ...config, roles: [...config.roles.slice(1, 9), config.roles[9]] }), /vai trò/);
+});
+
+test('image seat (8th) uses the AE_Team-installed skill; saved default text migrates', () => {
+  const image = defaultConfig().roles.find(r => r.id === 'image');
+  assert.equal(defaultConfig().roles.findIndex(r => r.id === 'image'), 7);
+  assert.equal(image.shortName, 'Skill AE_Team · iw-imagegen'); assert.match(image.systemPrompt, /\.claude\/skills/);
+  const saved = defaultConfig(); Object.assign(saved.roles[7], { shortName: 'Codex skill · iw-imagegen', systemPrompt: 'Tạo raster qua skill Codex iw-imagegen' });
+  const upgraded = upgradeConfig(saved).roles[7];
+  assert.equal(upgraded.shortName, 'Skill AE_Team · iw-imagegen'); assert.match(upgraded.systemPrompt, /AE_Team cài/);
+  const custom = defaultConfig(); custom.roles[7].shortName = 'Ảnh của tôi';
+  assert.equal(upgradeConfig(custom).roles[7].shortName, 'Ảnh của tôi', 'custom names are kept');
 });

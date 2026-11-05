@@ -38,5 +38,5 @@ test('engine discovery follows only version pointers inside a compatible install
 test('Vietnamese preset upgrade preserves custom models and explicitly gives position five SFX duties',()=>{
   const config=defaultConfig();config.roles[4].name='Compositing / FX';config.roles[4].model='my-model';
   const upgraded=upgradeConfig(config);assert.equal(upgraded.roles[4].name,'Hình ảnh & âm thanh');assert.equal(upgraded.roles[4].model,'my-model');assert.match(upgraded.roles[4].systemPrompt,/SFX/);
-  assert.equal(new Set(defaultConfig().roles.map(r=>r.name)).size,9);
+  assert.equal(new Set(defaultConfig().roles.map(r=>r.name)).size,10);
 });

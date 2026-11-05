@@ -262,7 +262,7 @@ export class Board {
       toolbox: { snapshot: this.toolbox, enabled: this.mcpEnabled },
       mcp: { plans: this.mcpPlans, busy: this.mcpBusy, hold: this.mcpHold, open: this.hub.open }, ae: { status: this.aeStatus, busy: this.aeBusy, hold: this.aeHold,
         plans: this.aeProposals, lastRead: this.aeLastRead, root: this.engine?.root || '' },
-      learning: { status: this.learningStatus, busy: Boolean(this.learningController), model: LEARNING_MODEL } });
+      learning: { status: this.learningStatus, busy: Boolean(this.learningController), model: this.config.roles.find(r => r.id === 'learn')?.model || LEARNING_MODEL } });
   }
   private async update(): Promise<void> { await this.persist(); await this.publish(); }
   async setKey(): Promise<void> {
@@ -474,7 +474,7 @@ export class Board {
   }
   private async hasCredentials(): Promise<boolean> {
     const shared = await this.context.secrets.get('gatewayKey');
-    const roles = this.config.roles.filter(r => !['image', 'qa'].includes(r.id));
+    const roles = this.config.roles.filter(r => !['image', 'qa', 'learn'].includes(r.id));
     const keyed = (r: typeof roles[number]) => Boolean(
       (shared || (['messages', 'claude-cli'].includes(r.protocol) ? process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY : process.env.OPENAI_API_KEY)) &&
       (['messages', 'claude-cli'].includes(r.protocol) ? this.config.anthropicBaseUrl : this.config.openaiBaseUrl));
@@ -611,7 +611,9 @@ export class Board {
     const prompt = 'CHỦ ĐỀ CẦN HỌC: ' + (topic || 'After Effects animation tổng quát: kỹ thuật chuyển động hữu ích cho đội') +
       '\nLỊCH SỬ: ' + history.length + ' phiên làm việc của CEO với AE_Team (đọc bằng read_history).' +
       (resume ? '\nĐây là lần TIẾP TỤC sau khi tạm dừng: phiên lịch sử đã đánh dấu học sẽ không trả lại; dùng recall_knowledge để không lưu trùng.' : '');
-    const options = { baseUrl: this.config.anthropicBaseUrl, apiKey: key, model: LEARNING_MODEL, system: LEARNING_SYSTEM, prompt,
+    const learnRole = this.config.roles.find(r => r.id === 'learn');
+    const model = learnRole?.model || LEARNING_MODEL;
+    const options = { baseUrl: this.config.anthropicBaseUrl, apiKey: key, model, system: LEARNING_SYSTEM + (learnRole ? '\n' + learnRole.systemPrompt : ''), prompt,
       maxTokens: Math.max(8192, this.config.maxOutputTokens), tools: LEARNING_TOOLS, signal: controller.signal };
     let conversation;
     try {
@@ -622,7 +624,7 @@ export class Board {
       if (!key) throw error;
       conversation = new GatewayConversation({ ...options, protocol: 'messages' });
     }
-    this.learningStatus = { state: 'running', topic, phase: 'start', message: 'Đang khởi động Claude Opus 5…', percent: this.learningStatus?.percent || 0,
+    this.learningStatus = { state: 'running', topic, phase: 'start', message: 'Đang khởi động ' + model + '…', percent: this.learningStatus?.percent || 0,
       lessonsSaved: resume ? this.learningStatus?.lessonsSaved || 0 : 0, historyLearned: 0, historyTotal: history.length, updatedAt: Date.now() };
     await this.publish();
     // Runs in the background; the board follows progress through published status updates.
@@ -667,7 +669,7 @@ export class Board {
         (dependencyText ? '\n\nBÀN GIAO ĐÃ DUYỆT\n' + dependencyText : '') +
         '\n\nPLAN AE CỦA BẠN (không replay plan đã gửi)\n' + aePlans(p => p.taskId === task.id, 8000) :
         'YÊU CẦU GỐC\n' + session.brief + '\n\nTASK HIỆN TẠI\n' + task.title + '\n' + task.prompt +
-          (delegates ? '\n\nKỸ SƯ CÓ THỂ GIAO VIỆC (mỗi người tối đa một việc riêng trong task này)\n' + JSON.stringify(this.config.roles.filter(r => !['qa', role.id].includes(r.id)).map(r => ({ roleId: r.id, name: r.name, model: r.model }))) +
+          (delegates ? '\n\nKỸ SƯ CÓ THỂ GIAO VIỆC (mỗi người tối đa một việc riêng trong task này)\n' + JSON.stringify(this.config.roles.filter(r => !['qa', 'learn', role.id].includes(r.id)).map(r => ({ roleId: r.id, name: r.name, model: r.model }))) +
           '\n\nVIỆC ĐÃ GIAO (kết quả đã gửi về PO; không giao lại cùng kỹ sư; read_subagent_result để đọc thêm)\n' + JSON.stringify(session.tasks.filter(t => t.parentTaskId === task.id).map(t => ({ id: t.id, roleId: t.roleId, status: t.status, summary: t.result.slice(0, 2000), checks: verifyChecks(t, session.proposals), error: t.error }))) : '') +
           '\n\nHƯỚNG DẪN REPOSITORY\n' + instructionFiles.join('\n\n') +
           '\n\nGÓP Ý CỦA CEO CHO ' + (role.id === 'lead' ? 'PO VÀ CÁC KỸ SƯ' : role.name) + '\n' + this.feedbackContext(session.id, role.id) +
@@ -694,7 +696,7 @@ export class Board {
           (delegates ? '\nẢNH: mọi yêu cầu tạo ảnh/hình/poster/chữ dạng ảnh giao NGAY cho Mỹ thuật & Tạo ảnh (roleId=art): vị trí này tạo PNG bằng skill iw-imagegen rồi import vào AE. Không tự dựng ảnh bằng text/shape layer và không giao kỹ sư khác dựng layer, trừ khi CEO nói rõ muốn layer.' : '') +
           '\nVai trò: ' + role.name + '. ' + role.systemPrompt,
         // Lessons learned by Claude Opus 5 (Học AE) that match this request.
-        prompt: prompt + toolboxNote + await knowledgeBlock(this.knowledge, session.brief + ' ' + task.title + ' ' + task.prompt, session.name),
+        prompt: prompt + toolboxNote + await knowledgeBlock(this.knowledge, session.brief + ' ' + task.title + ' ' + task.prompt, session.name, { id: role.id, name: role.name }),
         maxTokens: this.config.maxOutputTokens, tools: [...TOOLS, ...AE_TOOLS, ...TEAM_TOOLS, ...TOOLBOX_TOOLS, ...(role.id === 'art' ? [REQUEST_IMAGE_TOOL] : [])].filter(t =>
           !(['delegate_task', 'inspect_proposal', 'read_subagent_result'].includes(t.name) && !delegates) &&
           !(['list_skills', 'read_skill'].includes(t.name) && !hasSkills) &&
@@ -819,7 +821,7 @@ export class Board {
     if (session.demo || session.legacy || session.state !== 'running' || parent.status !== 'running' || parent.parentTaskId || parent.roleId !== 'lead')
       throw new Error('Chỉ PO đang chạy được gọi kỹ sư subagent một cấp.');
     const role = this.config.roles.find(r => r.id === args?.roleId);
-    if (!role || ['qa', 'image', parent.roleId].includes(role.id)) throw new Error('Chọn vai trò sản xuất khác để giao subagent.');
+    if (!role || ['qa', 'image', 'learn', parent.roleId].includes(role.id)) throw new Error('Chọn vai trò sản xuất khác để giao subagent.');
     const work = validateDelegation(args);
     // One dedicated job per engineer per PO task. A repeat delegation returns the existing result and
     // never re-runs it (no automatic retry); the PO must put everything for that engineer in one brief.
@@ -1374,14 +1376,15 @@ export class Board {
     const feedback = this.feedbackContext(session?.id || '', 'image');
     const imagePrompt = prompt + (feedback !== '[]' ? '\n\nGÓP Ý ĐÃ LƯU CỦA NGƯỜI DÙNG (yêu cầu mới nhất ở trên được ưu tiên)\n' + feedback : '');
     const settings = vscode.workspace.getConfiguration('aeTeam');
-    // Skill order: configured, Codex skill, Claude skill. Each is tried at most once per image.
+    // Skill order: configured, the skill AE_Team installs into ~/.claude/skills, then a Codex copy as fallback.
+    // Each is tried at most once per image.
     const home = os.homedir(), configured = settings.get<string>('imageScript', '');
     const skills: { label: string; script: string }[] = [];
-    for (const [label, script] of [['cấu hình', configured], ['Codex', path.join(home, '.codex', 'skills', 'iw-imagegen', 'scripts', 'image_gen.py')],
-      ['Claude', path.join(home, '.claude', 'skills', 'iw-imagegen', 'scripts', 'image_gen.py')]] as const) {
+    for (const [label, script] of [['cấu hình', configured], ['AE_Team (Claude)', path.join(home, '.claude', 'skills', 'iw-imagegen', 'scripts', 'image_gen.py')],
+      ['Codex', path.join(home, '.codex', 'skills', 'iw-imagegen', 'scripts', 'image_gen.py')]] as const) {
       if (script && !skills.some(x => path.resolve(x.script) === path.resolve(script)) && await fs.access(script).then(() => true, () => false)) skills.push({ label, script });
     }
-    if (!skills.length) throw new Error('Không tìm thấy script iw-imagegen (Codex hoặc Claude). Cấu hình aeTeam.imageScript trong Settings.');
+    if (!skills.length) throw new Error('Không tìm thấy skill iw-imagegen. Chạy lại bộ cài AE_Team để cài skill vào ~/.claude/skills, hoặc cấu hình aeTeam.imageScript trong Settings.');
     const python = await this.resolvePython(settings.get<string>('pythonPath', 'python'));
     const directory = path.join(this.root, '.ae-team', 'assets'); await fs.mkdir(directory, { recursive: true });
     const output = path.join(directory, 'asset-' + Date.now() + '.png');
