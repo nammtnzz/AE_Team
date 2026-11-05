@@ -38,3 +38,5 @@ PRIVACY.md
 # Installer output and the bundled skill ship in the Setup payload, never inside the VSIX.
 release/**
 skills/**
+# Local shortcuts (e.g. knowledge.lnk) point at personal paths and never ship.
+*.lnk
