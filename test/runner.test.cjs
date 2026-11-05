@@ -926,3 +926,18 @@ test('never prompts for a connection; the manual Kết nối Claude command stil
     await waitFor(() => board.learningStatus?.state === 'done', 'learning runs after the manual connection');
   } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
 });
+
+test('a Claude-only machine runs GPT seats on Claude; configured gateways are kept', async t => {
+  const { board, secrets } = await setup(t, async () => done(), {}, learningCli([], true));
+  const gpt = { id: 'camera_ui', protocol: 'responses', model: 'gpt-6.1-sol' }, messages = { id: 'x', protocol: 'messages', model: 'claude-opus-5-5' };
+  assert.deepEqual(await board.runnableRole(gpt), gpt, 'with an OpenAI gateway the GPT seat is unchanged');
+  board.config = { ...board.config, openaiBaseUrl: '', anthropicBaseUrl: '' }; secrets.delete('gatewayKey');
+  const savedO = process.env.OPENAI_API_KEY, savedA = process.env.ANTHROPIC_API_KEY; delete process.env.OPENAI_API_KEY; delete process.env.ANTHROPIC_API_KEY;
+  try {
+    assert.deepEqual(await board.runnableRole(gpt), { ...gpt, protocol: 'claude-cli', model: 'claude-sonnet-5-5' });
+    assert.deepEqual(await board.runnableRole(messages), { ...messages, protocol: 'claude-cli' }, 'Claude models keep their model');
+    assert.equal((await board.runnableRole({ id: 'image', protocol: 'iw-imagegen', model: 'gpt-image-2.5-sunburst' })).protocol, 'iw-imagegen');
+    assert.equal(board.config.roles.find(r => r.id === 'camera_ui').protocol, 'responses', 'saved team config is not rewritten');
+    assert.equal(await board.hasCredentials(), true, 'a Claude connection alone makes the team ready');
+  } finally { if (savedO !== undefined) process.env.OPENAI_API_KEY = savedO; if (savedA !== undefined) process.env.ANTHROPIC_API_KEY = savedA; }
+});

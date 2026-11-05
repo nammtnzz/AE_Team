@@ -166,6 +166,18 @@ try {
     }
     if (-not $ClaudeSkillsRoot) { $ClaudeSkillsRoot = if ($Fixture) { Join-Path $InstallRoot 'fixture-claude-skills' } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.claude/skills' } }
     $skill = Install-TeamSkill $ClaudeSkillsRoot
+    # Lessons learned on the machine that built this release merge (never overwrite) into this machine's store,
+    # which lives outside versions/ and keeps learning on top of them.
+    $knowledge = [ordered]@{state='none-bundled'}
+    $sharedLessons = Join-Path $packageRoot 'knowledge/shared-lessons.json'
+    if ([IO.File]::Exists($sharedLessons)) {
+        try {
+            $nodeExe = (Get-Command node -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+            $merged = (& $nodeExe (Join-Path $packageRoot 'tools/TeamKnowledge.cjs') --merge $sharedLessons (Join-Path $InstallRoot 'knowledge')) | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) { throw 'merge failed' }
+            $knowledge = [ordered]@{state='merged';added=$merged.added;updated=$merged.updated;total=$merged.total}
+        } catch { $knowledge = [ordered]@{state='not-merged';error=$_.Exception.Message} }
+    }
     if (-not $Fixture) {
         if ($SkipTeam) { $teamState = 'skipped-user-choice' }
         if ($InstallerPath) {
@@ -259,7 +271,7 @@ try {
             $backend | Add-Member -NotePropertyName warnings -NotePropertyValue (@($backend.warnings) + ('Chưa cài plugin native: ' + $_.Exception.Message)) -Force
         }
     }
-    $result = [ordered]@{schema='ae-codexteam-install/v1';state='success';imageSkill=$skill;version=$product.version;engineVersion=$backend.version;runtimeRoot=$backend.runtimeRoot;toolCount=$backend.toolCount;teamState=$teamState;cleanup=$cleanup;legacy=$legacyResult;native=$nativeResult;reloadRequired=$true;warnings=$backend.warnings;message='Đã cài AE_CodexTeam. Tải lại cửa sổ VS Code và MCP Codex; trong AE mở Window > AE_CodexTeam Bridge (khởi động lại AE nếu chưa thấy). Bấm Kiểm tra kết nối để xác nhận heartbeat mới.'}
+    $result = [ordered]@{schema='ae-codexteam-install/v1';state='success';imageSkill=$skill;knowledge=$knowledge;version=$product.version;engineVersion=$backend.version;runtimeRoot=$backend.runtimeRoot;toolCount=$backend.toolCount;teamState=$teamState;cleanup=$cleanup;legacy=$legacyResult;native=$nativeResult;reloadRequired=$true;warnings=$backend.warnings;message='Đã cài AE_CodexTeam. Tải lại cửa sổ VS Code và MCP Codex; trong AE mở Window > AE_CodexTeam Bridge (khởi động lại AE nếu chưa thấy). Bấm Kiểm tra kết nối để xác nhận heartbeat mới.'}
 } catch {
     $result = [ordered]@{schema='ae-codexteam-install/v1';state='error';engineInstalled=$engineInstalled;error=$_.Exception.Message;message='Không tự chạy lại tác vụ AE. Nếu engine đã cài, sửa bằng cùng bộ cài; bản cũ và dữ liệu vẫn được giữ.'}
 }

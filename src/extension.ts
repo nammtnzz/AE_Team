@@ -473,6 +473,20 @@ export class Board {
     await fs.writeFile(path.join(folder, 'team.json'), JSON.stringify(config, null, 2) + '\n');
     this.config = config;
   }
+  /** Model used when a GPT seat runs on Claude because this machine has no OpenAI gateway. */
+  static readonly CLAUDE_STAND_IN = 'claude-sonnet-5-5';
+  /**
+   * Seats run where this machine can reach them. A GPT seat without an OpenAI gateway (Base URL + key), or a
+   * Messages seat without an Anthropic Base URL, runs through the Claude Code CLI on the machine's own Claude
+   * connection, so a Claude-only machine still runs the whole team. The saved team config is not changed.
+   */
+  private async runnableRole<T extends { protocol: string; model: string }>(role: T): Promise<T> {
+    if (!['responses', 'chat', 'messages'].includes(role.protocol)) return role;
+    const key = await this.context.secrets.get('gatewayKey') || (role.protocol === 'messages' ? process.env.ANTHROPIC_API_KEY : process.env.OPENAI_API_KEY) || '';
+    const base = role.protocol === 'messages' ? this.config.anthropicBaseUrl : this.config.openaiBaseUrl;
+    if (key && base.trim()) return role;
+    return { ...role, protocol: 'claude-cli', model: role.protocol === 'messages' ? role.model : Board.CLAUDE_STAND_IN };
+  }
   private async hasCredentials(): Promise<boolean> {
     const shared = await this.context.secrets.get('gatewayKey');
     const roles = this.config.roles.filter(r => !['image', 'qa', 'learn'].includes(r.id));
@@ -480,9 +494,8 @@ export class Board {
       (shared || (['messages', 'claude-cli'].includes(r.protocol) ? process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY : process.env.OPENAI_API_KEY)) &&
       (['messages', 'claude-cli'].includes(r.protocol) ? this.config.anthropicBaseUrl : this.config.openaiBaseUrl));
     if (roles.every(keyed)) return true;
-    // Claude Code CLI roles can also run on the Claude account signed in to VS Code, without an API key.
-    if (!roles.every(r => keyed(r) || r.protocol === 'claude-cli')) return false;
-    return (await this.learningAuth()) === 'account';
+    // Seats without their own gateway run on Claude (see runnableRole), so the machine's Claude connection suffices.
+    return Boolean(await this.learningAuth());
   }
   private async importLocal(): Promise<void> {
     if (this.activeTasks.size || this.chatControllers.size || this.imageController) throw new Error('Dừng tác vụ trước khi đổi kết nối.');
@@ -662,7 +675,7 @@ export class Board {
     task.toolLog = []; delete task.checks;
     addEvent(session, 'Bắt đầu: ' + task.title, 'start', task.id); await this.update();
     try {
-      const role = this.config.roles.find(r => r.id === task.roleId)!;
+      const role = await this.runnableRole(this.config.roles.find(r => r.id === task.roleId)!);
       task.model = task.modelOverride || role.model;
       const key = await this.context.secrets.get('gatewayKey') ||
         (['messages', 'claude-cli'].includes(role.protocol) ? process.env.ANTHROPIC_API_KEY : process.env.OPENAI_API_KEY) || process.env.OPENAI_API_KEY || '';
@@ -1329,7 +1342,7 @@ export class Board {
     // Bind the target before any asynchronous work, even if the UI switches sessions.
     const session = sessionId ? this.sessions.find(s => s.id === sessionId) : undefined;
     if (sessionId && !session) throw new Error('Phiên nhận góp ý không còn tồn tại.');
-    const role = { ...configuredRole }, id = this.chatKey(role.id, sessionId);
+    const role = await this.runnableRole({ ...configuredRole }), id = this.chatKey(role.id, sessionId);
     if (this.chatControllers.has(id)) throw new Error(role.name + ' đang trả lời. Chờ hoàn tất hoặc bấm Dừng.');
     const controller = new AbortController(); this.chatControllers.set(id, { roleId: role.id, sessionId, controller });
     let chat = this.roleChats.find(c => c.roleId === role.id && c.sessionId === sessionId);

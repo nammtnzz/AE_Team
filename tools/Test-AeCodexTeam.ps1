@@ -50,6 +50,10 @@ try {
     [IO.File]::WriteAllText((Join-Path $skillDir 'SKILL.md'), 'user edit')
     $again=Install-Fixture $PayloadRoot
     Check ($again.state -eq 'success' -and $again.runtimeRoot -eq $first.runtimeRoot) 'repair is idempotent'
+    if (Test-Path -LiteralPath (Join-Path $PayloadRoot 'knowledge/shared-lessons.json')) {
+        Check ($first.knowledge.state -eq 'merged' -and $first.knowledge.added -ge 1 -and (Test-Path -LiteralPath (Join-Path $install 'knowledge/lessons.json'))) 'shared lessons merge into the installation knowledge store'
+        Check ($again.knowledge.state -eq 'merged' -and $again.knowledge.added -eq 0) 'reinstalling the same release adds no duplicate lessons'
+    }
     Check ([IO.File]::ReadAllText((Join-Path $skillDir '.env')) -match 'user-fixture-key') 'reinstall never replaces the user''s .env'
     Check ($again.imageSkill.backedUp -eq 1 -and @(Get-ChildItem -LiteralPath $skillDir -Directory -Filter '.ae-team-backup-*').Count -eq 1) 'a locally changed skill file is backed up before refresh'
     $skipText=& $pwsh -NoProfile -File (Join-Path $PayloadRoot 'tools/Install-AeCodexTeam.ps1') -InstallRoot $install -AppDataRoot $appData -VersionFolder '26.5' -Fixture -SkipTeam

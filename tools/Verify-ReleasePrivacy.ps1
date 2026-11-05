@@ -100,11 +100,13 @@ try {
     $engine=Read-ReleaseJson 'engine/distribution.json'
     if ($engine.schema -cne 'aect-distribution/v1') { throw 'Invalid engine manifest.' }
     $engineFiles=Test-ManifestFiles $engine 'engine/'
-    $allowedTools=@('TeamMaintenance.ps1','Install-AeCodexTeam.ps1','Manage-AeCodexTeam.ps1','Cleanup-AeCodexTeam.ps1','TeamStatus.cjs')
+    $allowedTools=@('TeamMaintenance.ps1','Install-AeCodexTeam.ps1','Manage-AeCodexTeam.ps1','Cleanup-AeCodexTeam.ps1','TeamStatus.cjs','TeamKnowledge.cjs')
     $allowedNative=@('AE_CodexTeam_Native.aex','Install-NativePlugin.ps1')
     $allowedState=@('.ae-codex/functions/catalog.json','.ae-codex/functions/capabilities.json','.ae-codex/library/USAGE.md','.ae-codex/plugins/USAGE.md')
     $expected=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     $null=$expected.Add('product.json')
+    # Sanitized shared lessons (optional); the content scan below still rejects personal paths and secrets.
+    $null=$expected.Add('knowledge/shared-lessons.json')
     $null=$expected.Add('engine/distribution.json')
     $null=$expected.Add([string]$product.vsix)
     foreach($name in $allowedTools){$null=$expected.Add('tools/'+$name)}

@@ -27,7 +27,7 @@ function build(){
   fs.writeFileSync(path.join(engineRoot,'distribution.json'),JSON.stringify(metadata,null,2));
   fs.mkdirSync(path.join(payload,'team'));const vsix='team/ae-codexteam-'+version+'.vsix';fs.copyFileSync(path.join(root,path.basename(vsix)),path.join(payload,vsix));
   fs.mkdirSync(path.join(payload,'tools'));
-  for(const name of ['TeamMaintenance.ps1','Install-AeCodexTeam.ps1','Manage-AeCodexTeam.ps1','Cleanup-AeCodexTeam.ps1','TeamStatus.cjs'])fs.copyFileSync(path.join(root,'tools',name),path.join(payload,'tools',name));
+  for(const name of ['TeamMaintenance.ps1','Install-AeCodexTeam.ps1','Manage-AeCodexTeam.ps1','Cleanup-AeCodexTeam.ps1','TeamStatus.cjs','TeamKnowledge.cjs'])fs.copyFileSync(path.join(root,'tools',name),path.join(payload,'tools',name));
   // Native AEGP bridge: built .aex + its installer, run by Install-AeCodexTeam.ps1.
   const aex=path.join(root,'native/out/AE_CodexTeam_Native.aex');if(!fs.existsSync(aex))throw Error('Build native first: native\build.cmd');
   fs.mkdirSync(path.join(payload,'native'));fs.copyFileSync(aex,path.join(payload,'native/AE_CodexTeam_Native.aex'));fs.copyFileSync(path.join(root,'native/Install-NativePlugin.ps1'),path.join(payload,'native/Install-NativePlugin.ps1'));
@@ -35,6 +35,8 @@ function build(){
   const skillFiles=['SKILL.md','.env.example','agents/openai.yaml','references/prompting.md','references/sample-prompts.md','scripts/image_gen.py'];
   for(const rel of skillFiles){const dest=path.join(payload,'skills/iw-imagegen',rel);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(root,'skills/iw-imagegen',rel),dest);}
   if(fs.existsSync(path.join(payload,'skills/iw-imagegen/.env')))throw Error('Refusing to ship skill credentials (.env)');
+  // Lessons learned on this machine travel with the release (sanitized); install merges them into the new machine.
+  if(process.env.AECT_EXCLUDE_KNOWLEDGE!=='1'){const source=process.env.AECT_SHARE_KNOWLEDGE_DIR||path.join(process.env.LOCALAPPDATA||'','AE_CodexTeam','knowledge');require('./TeamKnowledge.cjs').exportShared(source,path.join(payload,'knowledge/shared-lessons.json'));}
   const product={schema:'ae-codexteam-package/v1',product:'AE_CodexTeam',version,engineVersion,vsix,toolCount,additionalTools:['aect_library_search'],signed:false,files:walk(payload).map(rel=>fileEntry(payload,rel))};
   fs.writeFileSync(path.join(payload,'product.json'),JSON.stringify(product,null,2));
   console.log(JSON.stringify({stage,payload,version,engineVersion,files:product.files.length,packageId:id}));return{stage,payload};
