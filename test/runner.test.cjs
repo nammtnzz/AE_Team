@@ -848,9 +848,9 @@ const learningCli = turns => ({ findClaude: async () => 'claude.exe', ClaudeCliC
   async turn() { const next = turns.shift() || { text: 'Đã học xong', calls: [] }; return { raw: {}, inputTokens: 1, outputTokens: 1, text: next.text || '', calls: next.calls || [] }; }
   toolResults() {} } });
 
-test('automatic learning on startup uses Claude Opus 5 on the next AE animation topic, once per interval', async t => {
+test('automatic learning uses Claude Opus 5 on the next AE animation topic and honours an optional interval', async t => {
   const cli = learningCli([{ calls: [{ id: 'a', name: 'save_lesson', arguments: { title: 'Overshoot', lesson: 'Graph Editor: overshoot 110% rồi về 100% trong 4 frame', kind: 'tip' } }] }]);
-  const { board, global } = await setup(t, async () => done(), {}, cli);
+  const { board, global } = await setup(t, async () => done(), { autoLearnIntervalHours: 24 }, cli);
   await board.initialize();
   assert.equal(await board.maybeAutoLearn(), 'started');
   assert.equal(learningCli.options.model, 'claude-opus-5');
@@ -876,4 +876,17 @@ test('automatic learning respects the setting, a missing key and an explicit D�
   try { assert.equal(await second.board.maybeAutoLearn(), 'no-key'); } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
   second.global.set('learnPausedByUser', true);
   assert.equal(await second.board.maybeAutoLearn(), 'paused-by-user');
+});
+
+test('by default every VS Code start learns again; Dừng học lasts only for the current session', async t => {
+  const { board, global } = await setup(t, async () => done(), {}, learningCli([]));
+  await board.initialize();
+  assert.equal(await board.onStartup(), 'started');
+  await waitFor(() => !board.learningController, 'first run finishes');
+  assert.equal(await board.onStartup(), 'started', 'no daily limit by default');
+  await waitFor(() => !board.learningController, 'second run finishes');
+  global.set('learnPausedByUser', true);
+  assert.equal(await board.maybeAutoLearn(), 'paused-by-user', 'within the session a pause is respected');
+  assert.equal(await board.onStartup(), 'started', 'the next VS Code start learns again');
+  await waitFor(() => !board.learningController, 'third run finishes');
 });

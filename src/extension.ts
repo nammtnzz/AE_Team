@@ -28,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const board = new Board(context); activeBoard = board;
   await board.initialize();
   // Automatic learning starts shortly after VS Code settles, off the activation path.
-  const autoLearn = setTimeout(() => { void board.maybeAutoLearn(); }, 20000);
+  const autoLearn = setTimeout(() => { void board.onStartup(); }, 20000);
   context.subscriptions.push({ dispose: () => clearTimeout(autoLearn) });
   context.subscriptions.push(
     vscode.commands.registerCommand('aeTeam.open', () => board.open()),
@@ -560,18 +560,23 @@ export class Board {
   }
 
   /**
-   * On startup Claude Opus 5 learns from the web/YouTube and past work: at most once per interval, only with a
-   * key, never while learning, and never against an explicit "Dừng học". A run interrupted by closing VS Code resumes.
+   * Claude Opus 5 learns from the web/YouTube and past work: by default on every VS Code start (optional interval),
+   * only with a key and never while learning. "Dừng học" holds for the current VS Code session; an interrupted run resumes.
    */
+  async onStartup(): Promise<string> {
+    await this.context.globalState.update('learnPausedByUser', false);
+    return this.maybeAutoLearn();
+  }
+
   async maybeAutoLearn(): Promise<string> {
     const settings = vscode.workspace.getConfiguration('aeTeam');
     if (!settings.get<boolean>('autoLearn', true)) return 'disabled';
     if (this.learningController) return 'busy';
     if (this.context.globalState.get<boolean>('learnPausedByUser', false)) return 'paused-by-user';
-    const hours = Math.max(1, settings.get<number>('autoLearnIntervalHours', 24));
+    const hours = Math.max(0, settings.get<number>('autoLearnIntervalHours', 0));
     const last = this.context.globalState.get<number>('learnLastAutoAt', 0);
     const interrupted = this.learningStatus?.state === 'paused';
-    if (!interrupted && Date.now() - last < hours * 3600000) return 'recent';
+    if (!interrupted && hours > 0 && Date.now() - last < hours * 3600000) return 'recent';
     if (!(await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY)) return 'no-key';
     await this.context.globalState.update('learnLastAutoAt', Date.now());
     // Each automatic run studies the next After Effects animation topic, so coverage grows over the days.
