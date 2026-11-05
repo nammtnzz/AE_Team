@@ -36,7 +36,7 @@ function build(){
   for(const rel of skillFiles){const dest=path.join(payload,'skills/iw-imagegen',rel);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(root,'skills/iw-imagegen',rel),dest);}
   if(fs.existsSync(path.join(payload,'skills/iw-imagegen/.env')))throw Error('Refusing to ship skill credentials (.env)');
   // Lessons learned on this machine travel with the release (sanitized); install merges them into the new machine.
-  if(process.env.AECT_EXCLUDE_KNOWLEDGE!=='1'){const source=process.env.AECT_SHARE_KNOWLEDGE_DIR||path.join(process.env.LOCALAPPDATA||'','AE_CodexTeam','knowledge');require('./TeamKnowledge.cjs').exportShared(source,path.join(payload,'knowledge/shared-lessons.json'));}
+  if(process.env.AECT_EXCLUDE_KNOWLEDGE!=='1'){const local=process.env.LOCALAPPDATA||'',current=path.join(local,'AE_Team','knowledge'),older=path.join(local,'AE_CodexTeam','knowledge');const source=process.env.AECT_SHARE_KNOWLEDGE_DIR||(fs.existsSync(path.join(current,'lessons.json'))||!fs.existsSync(path.join(older,'lessons.json'))?current:older);require('./TeamKnowledge.cjs').exportShared(source,path.join(payload,'knowledge/shared-lessons.json'));}
   const product={schema:'ae-codexteam-package/v1',product:'AE_CodexTeam',version,engineVersion,vsix,toolCount,additionalTools:['aect_library_search'],signed:false,files:walk(payload).map(rel=>fileEntry(payload,rel))};
   fs.writeFileSync(path.join(payload,'product.json'),JSON.stringify(product,null,2));
   console.log(JSON.stringify({stage,payload,version,engineVersion,files:product.files.length,packageId:id}));return{stage,payload};

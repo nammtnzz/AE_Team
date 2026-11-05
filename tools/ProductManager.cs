@@ -24,7 +24,7 @@ internal sealed class ProductManager : Form {
     bool working;
     public ProductManager(string payload, string executable, string release, bool smoke) {
         root=payload;installer=executable;version=release;
-        installRoot=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AE_CodexTeam");
+        installRoot=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AE_Team");
         Text="AE_CodexTeam · Cài đặt";ClientSize=new Size(780,550);MinimumSize=new Size(740,540);
         StartPosition=FormStartPosition.CenterScreen;BackColor=paper;ForeColor=Color.FromArgb(238,238,242);Font=new Font("Segoe UI",10);
         AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;

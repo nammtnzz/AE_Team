@@ -12,7 +12,7 @@
 # -Register installs a daily current-user scheduled task; -Unregister removes it.
 [CmdletBinding()]
 param(
-    [string]$InstallRoot = (Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'AE_CodexTeam'),
+    [string]$InstallRoot = (Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'AE_Team'),
     [string[]]$WorkspaceRoots = @(),
     [int]$Days = 10,
     [switch]$WhatIf,

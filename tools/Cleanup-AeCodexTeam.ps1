@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$InstallRoot=(Join-Path $env:LOCALAPPDATA 'AE_CodexTeam'))
+param([string]$InstallRoot=(Join-Path $env:LOCALAPPDATA 'AE_Team'))
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'TeamMaintenance.ps1')
 $cleanupLock=$null

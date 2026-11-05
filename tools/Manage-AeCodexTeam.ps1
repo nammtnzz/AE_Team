@@ -1,6 +1,6 @@
 ﻿#Requires -Version 5.1
 [CmdletBinding()]
-param([switch]$Check,[switch]$SmokeTest,[string]$InstallerPath,[string]$InstallRoot=(Join-Path $env:LOCALAPPDATA 'AE_CodexTeam'))
+param([switch]$Check,[switch]$SmokeTest,[string]$InstallerPath,[string]$InstallRoot=(Join-Path $env:LOCALAPPDATA 'AE_Team'))
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)

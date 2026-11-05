@@ -1,3 +1,8 @@
+## 1.1.1
+
+- Thư mục cài đổi thành %LOCALAPPDATA%AE_Team. Bản cài AE_CodexTeam cũ được chuyển tự động: gỡ loader/MCP cũ an toàn, chép inventory và kho kiến thức sang chỗ mới; thư mục cũ giữ làm dự phòng.
+- Extension tìm engine và kho kiến thức ở AE_Team trước, rồi tới AE_CodexTeam.
+- Không đóng gói lối tắt .lnk vào VSIX.
 ## 1.1.0
 
 - Vị trí thứ 10 **Học tập** (Claude Opus 5): tự học After Effects animation từ web, YouTube và lịch sử làm việc mỗi lần mở VS Code; thanh tiến trình, Dừng học/Tiếp tục trên bảng điều phối.

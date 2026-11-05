@@ -90,13 +90,13 @@ export function boundedResult(value: any): any {
 /** One lazy local MCP connection, no polling and no automatic job replay. */
 export function resolveEngineRoot(explicit?: string, local = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local')): string {
   if (explicit) return path.resolve(explicit);
-  for (const name of ['AE_CodexTeam', 'CodexAE']) {
+  for (const name of ['AE_Team', 'AE_CodexTeam', 'CodexAE']) {
     const base = path.join(local, name);
     try { const info = JSON.parse(readFileSync(path.join(base, 'installation.json'), 'utf8'));
       const runtime = path.resolve(info.runtimeRoot); const rel = path.relative(path.join(base, 'versions'), runtime);
       // CodexAE is only a pre-migration fallback: it must carry our product marker and not be retired,
       // so a side-by-side Codex AE install there is never mistaken for AE_CodexTeam.
-      if (['aect-installation/v1', 'codex-ae-installation/v1'].includes(info.schema) && (name === 'AE_CodexTeam' || (info.product === 'AE_CodexTeam' && info.state !== 'uninstalled')) && rel && !rel.startsWith('..') && !path.isAbsolute(rel) && existsSync(path.join(runtime, 'tools', 'AeFunctionsMcp.js'))) return runtime;
+      if (['aect-installation/v1', 'codex-ae-installation/v1'].includes(info.schema) && (['AE_Team', 'AE_CodexTeam'].includes(name) || (info.product === 'AE_CodexTeam' && info.state !== 'uninstalled')) && rel && !rel.startsWith('..') && !path.isAbsolute(rel) && existsSync(path.join(runtime, 'tools', 'AeFunctionsMcp.js'))) return runtime;
     } catch { /* try next compatible install */ }
   }
   // The VSIX does not package engine/ (the EXE installs it), so the bundled folder only exists in a source checkout.

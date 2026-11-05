@@ -1,4 +1,5 @@
 import * as fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -72,7 +73,9 @@ export function extractYouTube(html: string): string {
 /** Lives outside versions/<id> so upgrades and retention keep it; shared with the AE_Team engine. */
 export function knowledgeDir(): string {
   const local = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-  return process.env.AECT_KNOWLEDGE_DIR ? path.resolve(process.env.AECT_KNOWLEDGE_DIR) : path.join(local, 'AE_CodexTeam', 'knowledge');
+  if (process.env.AECT_KNOWLEDGE_DIR) return path.resolve(process.env.AECT_KNOWLEDGE_DIR);
+  const current = path.join(local, 'AE_Team', 'knowledge'), older = path.join(local, 'AE_CodexTeam', 'knowledge');
+  return !existsSync(current) && existsSync(path.join(older, 'lessons.json')) ? older : current;
 }
 const words = (text: unknown) => String(text || '').toLowerCase().normalize('NFC').split(/[^\p{L}\p{N}_.]+/u).filter(w => w.length > 1);
 const normalize = (text: unknown) => words(text).join(' ');

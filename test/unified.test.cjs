@@ -40,3 +40,23 @@ test('Vietnamese preset upgrade preserves custom models and explicitly gives pos
   const upgraded=upgradeConfig(config);assert.equal(upgraded.roles[4].name,'Hình ảnh & âm thanh');assert.equal(upgraded.roles[4].model,'my-model');assert.match(upgraded.roles[4].systemPrompt,/SFX/);
   assert.equal(new Set(defaultConfig().roles.map(r=>r.name)).size,10);
 });
+
+test('engine and knowledge are found in AE_Team first; an older AE_CodexTeam install still works until migrated', async () => {
+  const os = require('node:os'), path = require('node:path'), fs = require('node:fs');
+  const local = fs.mkdtempSync(path.join(os.tmpdir(), 'aect-local-'));
+  const install = (name, id) => { const runtime = path.join(local, name, 'versions', id); fs.mkdirSync(path.join(runtime, 'tools'), { recursive: true }); fs.writeFileSync(path.join(runtime, 'tools', 'AeFunctionsMcp.js'), '');
+    fs.writeFileSync(path.join(local, name, 'installation.json'), JSON.stringify({ schema: 'aect-installation/v1', runtimeRoot: runtime, product: 'AE_CodexTeam' })); return runtime; };
+  const old = install('AE_CodexTeam', '1.0.0-aaaaaaaaaaaa');
+  assert.equal(resolveEngineRoot('', local), old, 'an older install is still found');
+  const current = install('AE_Team', '1.1.1-bbbbbbbbbbbb');
+  assert.equal(resolveEngineRoot('', local), current, 'AE_Team wins once installed');
+  const { knowledgeDir } = require('../dist/learning');
+  const saved = { LOCALAPPDATA: process.env.LOCALAPPDATA, AECT_KNOWLEDGE_DIR: process.env.AECT_KNOWLEDGE_DIR };
+  process.env.LOCALAPPDATA = local; delete process.env.AECT_KNOWLEDGE_DIR;
+  try {
+    fs.mkdirSync(path.join(local, 'AE_CodexTeam', 'knowledge'), { recursive: true }); fs.writeFileSync(path.join(local, 'AE_CodexTeam', 'knowledge', 'lessons.json'), '{}');
+    assert.equal(knowledgeDir(), path.join(local, 'AE_CodexTeam', 'knowledge'), 'not migrated yet: keep using the old store');
+    fs.mkdirSync(path.join(local, 'AE_Team', 'knowledge'), { recursive: true });
+    assert.equal(knowledgeDir(), path.join(local, 'AE_Team', 'knowledge'), 'migrated: the AE_Team store is used');
+  } finally { for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+});

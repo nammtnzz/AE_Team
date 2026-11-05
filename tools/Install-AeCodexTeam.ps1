@@ -1,7 +1,7 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-    [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'AE_CodexTeam'),
+    [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'AE_Team'),
     [string]$AppDataRoot = ([Environment]::GetFolderPath('ApplicationData')),
     [string]$VersionFolder,
     [string]$LegacyRoot,
@@ -103,7 +103,10 @@ try {
         Assert-TeamIdle $prior.runtimeRoot
     }
     $legacyInstall = $null
-    $legacyCandidate = if ($LegacyInstallRoot) { [IO.Path]::GetFullPath($LegacyInstallRoot) } elseif (-not $Fixture) { Join-Path $env:LOCALAPPDATA 'CodexAE' } else { $null }
+    # Older install folders, newest name first: AE_CodexTeam (until 1.1.0), then CodexAE (early builds).
+    $legacyCandidate = if ($LegacyInstallRoot) { [IO.Path]::GetFullPath($LegacyInstallRoot) } elseif (-not $Fixture) {
+        @('AE_CodexTeam','CodexAE' | ForEach-Object { Join-Path $env:LOCALAPPDATA $_ } | Where-Object { $_ -ine $InstallRoot -and (Test-Path -LiteralPath (Join-Path $_ 'installation.json') -PathType Leaf) })[0]
+    } else { $null }
     if ($legacyCandidate -and $legacyCandidate -ine $InstallRoot -and (Test-Path -LiteralPath (Join-Path $legacyCandidate 'installation.json') -PathType Leaf)) {
         $legacyMeta = Read-TeamJson (Join-Path $legacyCandidate 'installation.json')
         # Only our own old install (product marker) is touched; a real Codex AE install has no such marker.
@@ -166,6 +169,17 @@ try {
     }
     if (-not $ClaudeSkillsRoot) { $ClaudeSkillsRoot = if ($Fixture) { Join-Path $InstallRoot 'fixture-claude-skills' } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.claude/skills' } }
     $skill = Install-TeamSkill $ClaudeSkillsRoot
+    # Moving from an older install folder: its learned knowledge is copied here (the old copy stays as a backup).
+    foreach ($oldRoot in @($(if ($legacyInstall) { $legacyInstall.root }), $(if (-not $Fixture) { Join-Path $env:LOCALAPPDATA 'AE_CodexTeam' })) | Where-Object { $_ -and $_ -ine $InstallRoot } | Select-Object -Unique) {
+        $oldKnowledge = Join-Path $oldRoot 'knowledge'; $newKnowledge = Join-Path $InstallRoot 'knowledge'
+        if ([IO.File]::Exists((Join-Path $oldKnowledge 'lessons.json')) -and -not [IO.File]::Exists((Join-Path $newKnowledge 'lessons.json'))) {
+            Assert-TeamPlainPath $oldKnowledge; Assert-TeamPlainPath $newKnowledge
+            foreach ($file in Get-ChildItem -LiteralPath $oldKnowledge -Recurse -File -Force) {
+                $target = Join-Path $newKnowledge ([IO.Path]::GetRelativePath($oldKnowledge, $file.FullName))
+                [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target)) | Out-Null; [IO.File]::Copy($file.FullName, $target, $false)
+            }
+        }
+    }
     # Lessons learned on the machine that built this release merge (never overwrite) into this machine's store,
     # which lives outside versions/ and keeps learning on top of them.
     $knowledge = [ordered]@{state='none-bundled'}
