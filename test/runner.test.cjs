@@ -843,7 +843,7 @@ test('an Opus safety-filter false positive retries the task once with Sonnet, th
   assert.ok(session.events.some(e => /chặn nhầm/.test(e.text)));
 });
 
-const learningCli = turns => ({ findClaude: async () => 'claude.exe', ClaudeCliConversation: class {
+const learningCli = (turns, account = false) => ({ findClaude: async () => 'claude.exe', claudeAccountReady: async () => account, ClaudeCliConversation: class {
   constructor(options) { learningCli.options = options; }
   async turn() { const next = turns.shift() || { text: 'Đã học xong', calls: [] }; return { raw: {}, inputTokens: 1, outputTokens: 1, text: next.text || '', calls: next.calls || [] }; }
   toolResults() {} } });
@@ -873,7 +873,7 @@ test('automatic learning respects the setting, a missing key and an explicit D�
   const second = await setup(t, async () => done(), {}, learningCli([]));
   await second.board.initialize();
   second.secrets.delete('gatewayKey'); const saved = process.env.ANTHROPIC_API_KEY; delete process.env.ANTHROPIC_API_KEY;
-  try { assert.equal(await second.board.maybeAutoLearn(), 'no-key'); } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
+  try { assert.equal(await second.board.maybeAutoLearn(), 'no-auth', 'no key and no signed-in Claude account'); } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
   second.global.set('learnPausedByUser', true);
   assert.equal(await second.board.maybeAutoLearn(), 'paused-by-user');
 });
@@ -889,4 +889,18 @@ test('by default every VS Code start learns again; Dừng học lasts only for t
   assert.equal(await board.maybeAutoLearn(), 'paused-by-user', 'within the session a pause is respected');
   assert.equal(await board.onStartup(), 'started', 'the next VS Code start learns again');
   await waitFor(() => !board.learningController, 'third run finishes');
+});
+
+test('without an API key, learning runs on the Claude account signed in to Claude Code', async t => {
+  const cli = learningCli([{ calls: [{ id: 'a', name: 'save_lesson', arguments: { title: 'Bounce', lesson: 'Expression bounce: amp 0.05, freq 4, decay 8', kind: 'tip' } }] }], true);
+  const { board, secrets } = await setup(t, async () => done(), {}, cli);
+  await board.initialize();
+  secrets.delete('gatewayKey'); const saved = process.env.ANTHROPIC_API_KEY; delete process.env.ANTHROPIC_API_KEY;
+  try {
+    assert.equal(await board.onStartup(), 'started');
+    assert.equal(learningCli.options.apiKey, '', 'account mode: no API key is passed to the CLI');
+    assert.equal(learningCli.options.model, 'claude-opus-5');
+    await waitFor(() => board.learningStatus?.state === 'done', 'account-mode learning finishes');
+    assert.equal(board.learningStatus.lessonsSaved, 1);
+  } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
 });

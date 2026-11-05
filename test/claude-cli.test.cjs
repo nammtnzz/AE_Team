@@ -22,3 +22,48 @@ test('CLI bridge rejects missing structured output, unknown tools and malformed 
   ] } }), tools, 1), /không hợp lệ/);
   assert.throws(() => parseCliOutput('{"is_error":true,"result":"permission denied"}', tools, 1), /permission denied/);
 });
+
+// Loads the CLI bridge with a fake spawn that records how Claude Code would be launched.
+function loadWithFakeSpawn(stdout) {
+  const Module = require('node:module'); const path = require('node:path'); const fs = require('node:fs');
+  const { EventEmitter } = require('node:events');
+  const location = require.resolve('../dist/claude-cli'); const launches = [];
+  const fake = { spawn(executable, args, options) {
+    launches.push({ executable, args, env: options.env });
+    const child = new EventEmitter(); child.stdout = new EventEmitter(); child.stderr = new EventEmitter();
+    child.stdin = { on() {}, end() {} };
+    setImmediate(() => { child.stdout.emit('data', stdout); child.emit('close', 0); });
+    child.kill = () => {}; return child;
+  } };
+  const mod = new Module(location, module); mod.filename = location; mod.paths = Module._nodeModulePaths(path.dirname(location));
+  const normal = mod.require.bind(mod); mod.require = id => id === 'node:child_process' ? fake : normal(id);
+  mod._compile(fs.readFileSync(location, 'utf8'), location);
+  return { api: mod.exports, launches };
+}
+const answer = JSON.stringify({ structured_output: { text: 'ok', toolCalls: [] }, usage: {} });
+const options = (apiKey) => ({ executable: 'claude.exe', cwd: '.', baseUrl: 'https://gateway.invalid/v1', apiKey, model: 'claude-opus-5',
+  system: 's', prompt: 'p', maxTokens: 1000, tools, signal: new AbortController().signal });
+
+test('without an API key the CLI runs on the signed-in Claude account (no --bare, no key override)', async () => {
+  const { api, launches } = loadWithFakeSpawn(answer);
+  process.env.ANTHROPIC_API_KEY = 'leaked-env-key';
+  try { await new api.ClaudeCliConversation(options('')).turn(); } finally { delete process.env.ANTHROPIC_API_KEY; }
+  const launch = launches[0];
+  assert.ok(!launch.args.includes('--bare'), '--bare only accepts API keys');
+  assert.ok(launch.args.includes('--restricted') && launch.args.includes('--strict-mcp-config'), 'still isolated');
+  assert.equal(launch.env.ANTHROPIC_API_KEY, undefined); assert.equal(launch.env.ANTHROPIC_BASE_URL, undefined);
+  assert.equal(launch.args[launch.args.indexOf('--model') + 1], 'claude-opus-5');
+});
+
+test('with an API key the CLI keeps bare mode and the configured gateway', async () => {
+  const { api, launches } = loadWithFakeSpawn(answer);
+  await new api.ClaudeCliConversation(options('secret-key')).turn();
+  assert.ok(launches[0].args.includes('--bare'));
+  assert.equal(launches[0].env.ANTHROPIC_API_KEY, 'secret-key'); assert.equal(launches[0].env.ANTHROPIC_BASE_URL, 'https://gateway.invalid');
+});
+
+test('claudeAccountReady reads the signed-in state from `claude auth status`', async () => {
+  assert.equal(await loadWithFakeSpawn('{"loggedIn":true,"authMethod":"oauth_token"}').api.claudeAccountReady('claude.exe'), true);
+  assert.equal(await loadWithFakeSpawn('{"loggedIn":false}').api.claudeAccountReady('claude.exe'), false);
+  assert.equal(await loadWithFakeSpawn('not json').api.claudeAccountReady('claude.exe'), false);
+});

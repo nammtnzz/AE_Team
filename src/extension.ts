@@ -7,7 +7,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { TeamConfig, Session, Task, Proposal, COMMON, defaultConfig, validateConfig, newSession,
   readyTasks, refreshDependencyBlocks, imageIntent, IMAGE_ROUTE, retryTask, addEvent, demoSession, upgradeConfig, MODEL_PRESETS, QaMessage, RoleChat, ImageWork, newPoSession } from './core';
 import { GatewayConversation, endpoint } from './gateway';
-import { ClaudeCliConversation, findClaude } from './claude-cli';
+import { ClaudeCliConversation, claudeAccountReady, findClaude } from './claude-cli';
 import { HistoryItem, KnowledgeStore, nextAnimationTopic, LEARNING_MODEL, LEARNING_SYSTEM, LEARNING_TOOLS, LearningStatus, knowledgeBlock, readLearningStatus, runLearning } from './learning';
 import { TOOLS, safePath, readText, listFiles, allowedFile, hash } from './files';
 import { AeEngine, AeProposal, AE_TOOLS, AE_READ_FUNCTIONS, makeAeProposal, boundedResult, ENGINE_MISSING } from './ae';
@@ -474,9 +474,14 @@ export class Board {
   }
   private async hasCredentials(): Promise<boolean> {
     const shared = await this.context.secrets.get('gatewayKey');
-    return this.config.roles.filter(r => !['image', 'qa'].includes(r.id)).every(r => Boolean(
+    const roles = this.config.roles.filter(r => !['image', 'qa'].includes(r.id));
+    const keyed = (r: typeof roles[number]) => Boolean(
       (shared || (['messages', 'claude-cli'].includes(r.protocol) ? process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY : process.env.OPENAI_API_KEY)) &&
-      (['messages', 'claude-cli'].includes(r.protocol) ? this.config.anthropicBaseUrl : this.config.openaiBaseUrl)));
+      (['messages', 'claude-cli'].includes(r.protocol) ? this.config.anthropicBaseUrl : this.config.openaiBaseUrl));
+    if (roles.every(keyed)) return true;
+    // Claude Code CLI roles can also run on the Claude account signed in to VS Code, without an API key.
+    if (!roles.every(r => keyed(r) || r.protocol === 'claude-cli')) return false;
+    return (await this.learningAuth()) === 'account';
   }
   private async importLocal(): Promise<void> {
     if (this.activeTasks.size || this.chatControllers.size || this.imageController) throw new Error('Dừng tác vụ trước khi đổi kết nối.');
@@ -577,7 +582,7 @@ export class Board {
     const last = this.context.globalState.get<number>('learnLastAutoAt', 0);
     const interrupted = this.learningStatus?.state === 'paused';
     if (!interrupted && hours > 0 && Date.now() - last < hours * 3600000) return 'recent';
-    if (!(await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY)) return 'no-key';
+    if (!(await this.learningAuth())) return 'no-auth';
     await this.context.globalState.update('learnLastAutoAt', Date.now());
     // Each automatic run studies the next After Effects animation topic, so coverage grows over the days.
     const topic = interrupted ? this.learningStatus!.topic : nextAnimationTopic(this.context.globalState.get<string>('learnLastTopic', ''));
@@ -586,11 +591,20 @@ export class Board {
     catch { return 'failed'; }
   }
 
+  /** API key when saved; otherwise 'account' when Claude Code is signed in to a Claude account; else ''. */
+  private async learningAuth(): Promise<string> {
+    const key = await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY || '';
+    if (key) return key;
+    try { return await claudeAccountReady(await findClaude(vscode.workspace.getConfiguration('aeTeam').get<string>('claudePath', ''))) ? 'account' : ''; }
+    catch { return ''; }
+  }
+
   private async startLearning(topic: string, resume: boolean): Promise<void> {
     if (this.learningController) throw new Error('Đang học. Bấm Dừng học trước khi bắt đầu lại.');
     topic = topic.replace(/\s+/g, ' ').trim().slice(0, 200);
-    const key = await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY || '';
-    if (!key) throw new Error('Chưa có API key cho Claude. Lưu key qua "AE_Team: Lưu API key" trước khi học.');
+    const auth = await this.learningAuth();
+    if (!auth) throw new Error('Chưa có cách gọi Claude: đăng nhập Claude Code trong VS Code (tài khoản Claude) hoặc lưu API key qua "AE_Team: Lưu API key".');
+    const key = auth === 'account' ? '' : auth;
     const controller = new AbortController();
     this.learningController = controller; this.learningPaused = false;
     const history = this.learningHistory();
@@ -603,7 +617,11 @@ export class Board {
     try {
       conversation = new ClaudeCliConversation({ ...options, cwd: this.root,
         executable: await findClaude(vscode.workspace.getConfiguration('aeTeam').get<string>('claudePath', '')) });
-    } catch { conversation = new GatewayConversation({ ...options, protocol: 'messages' }); }
+    } catch (error) {
+      // Without the CLI only an API key can reach Claude.
+      if (!key) throw error;
+      conversation = new GatewayConversation({ ...options, protocol: 'messages' });
+    }
     this.learningStatus = { state: 'running', topic, phase: 'start', message: 'Đang khởi động Claude Opus 5…', percent: this.learningStatus?.percent || 0,
       lessonsSaved: resume ? this.learningStatus?.lessonsSaved || 0 : 0, historyLearned: 0, historyTotal: history.length, updatedAt: Date.now() };
     await this.publish();
