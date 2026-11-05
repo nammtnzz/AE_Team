@@ -33,3 +33,5 @@ dist/
 !/engine/.ae-codex/library/USAGE.md
 /engine/.ae-codex/plugins/*
 !/engine/.ae-codex/plugins/USAGE.md
+# Shortcut to the knowledge store in the install folder (AppData); never committed.
+*.lnk
