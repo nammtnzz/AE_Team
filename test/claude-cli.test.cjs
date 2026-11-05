@@ -53,7 +53,11 @@ test('without an API key the CLI runs on the signed-in Claude account (no --bare
   try { await new api.ClaudeCliConversation(options('')).turn(); } finally { delete process.env.ANTHROPIC_API_KEY; }
   const launch = launches[0];
   assert.ok(!launch.args.includes('--bare'), '--bare only accepts API keys');
-  assert.ok(launch.args.includes('--restricted') && launch.args.includes('--strict-mcp-config'), 'still isolated');
+  // Connects like the user's own Claude Code (user settings), with hooks, tools, MCP and slash commands off.
+  assert.equal(launch.args[launch.args.indexOf('--setting-sources') + 1], 'user');
+  assert.deepEqual(JSON.parse(launch.args[launch.args.indexOf('--settings') + 1]), { disableAllHooks: true });
+  assert.equal(launch.args[launch.args.indexOf('--tools') + 1], '');
+  assert.ok(launch.args.includes('--strict-mcp-config') && launch.args.includes('--disable-slash-commands'), 'still isolated');
   assert.equal(launch.env.ANTHROPIC_API_KEY, undefined); assert.equal(launch.env.ANTHROPIC_BASE_URL, undefined);
   assert.equal(launch.args[launch.args.indexOf('--model') + 1], 'claude-opus-5');
 });
@@ -61,7 +65,7 @@ test('without an API key the CLI runs on the signed-in Claude account (no --bare
 test('with an API key the CLI keeps bare mode and the configured gateway', async () => {
   const { api, launches } = loadWithFakeSpawn(answer);
   await new api.ClaudeCliConversation(options('secret-key')).turn();
-  assert.ok(launches[0].args.includes('--bare'));
+  assert.ok(launches[0].args.includes('--bare') && launches[0].args.includes('--restricted') && !launches[0].args.includes('--setting-sources'));
   assert.equal(launches[0].env.ANTHROPIC_API_KEY, 'secret-key'); assert.equal(launches[0].env.ANTHROPIC_BASE_URL, 'https://gateway.invalid');
 });
 
@@ -82,10 +86,18 @@ test('without an AE_Team key the CLI reuses the API/gateway configured for Claud
     assert.equal(launches[0].env.ANTHROPIC_BASE_URL, 'https://llmproxy.example/');
     assert.equal(launches[0].env.ANTHROPIC_AUTH_TOKEN, 'gateway-token-123');
     assert.equal(launches[0].env.OTHER, undefined, 'only connection values pass through --restricted');
-    assert.ok(!launches[0].args.includes('--bare') && launches[0].args.includes('--restricted'));
+    assert.ok(!launches[0].args.includes('--bare') && launches[0].args.includes('--setting-sources'));
     assert.equal(await api.claudeAccountReady('claude.exe'), true, 'a configured gateway counts as connected');
     const failing = loadWithFakeSpawn(JSON.stringify({ is_error: true, result: 'bad token gateway-token-123' }));
     const conversation = new failing.api.ClaudeCliConversation(options(''));
     await assert.rejects(conversation.turn(), error => !error.message.includes('gateway-token-123'));
   } finally { fs.rmSync(path.join(claudeHome, '.claude'), { recursive: true, force: true }); }
+});
+
+test('a Claude Code apiKeyHelper counts as connected', async () => {
+  const fs = require('node:fs'), path = require('node:path');
+  fs.mkdirSync(path.join(claudeHome, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(claudeHome, '.claude', 'settings.json'), JSON.stringify({ apiKeyHelper: 'node get-key.js' }));
+  try { assert.equal(await loadWithFakeSpawn('{"loggedIn":false}').api.claudeAccountReady('claude.exe'), true); }
+  finally { fs.rmSync(path.join(claudeHome, '.claude'), { recursive: true, force: true }); }
 });

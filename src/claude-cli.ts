@@ -36,6 +36,11 @@ export async function claudeCodeConnection(home = process.env.AECT_CLAUDE_HOME |
 export async function claudeAccountReady(executable: string): Promise<boolean> {
   const connection = await claudeCodeConnection();
   if (connection.ANTHROPIC_AUTH_TOKEN || connection.ANTHROPIC_API_KEY) return true;
+  // A key helper program configured for Claude Code also counts as connected.
+  try {
+    const settings = JSON.parse(await fs.readFile(path.join(process.env.AECT_CLAUDE_HOME || os.homedir(), '.claude', 'settings.json'), 'utf8'));
+    if (typeof settings?.apiKeyHelper === 'string' && settings.apiKeyHelper.trim()) return true;
+  } catch { /* no user settings */ }
   return new Promise(resolve => {
     const env: NodeJS.ProcessEnv = { ...process.env }; delete env.ANTHROPIC_API_KEY; delete env.CLAUDECODE;
     const child = spawn(executable, ['auth', 'status'], { env, windowsHide: true, shell: false, stdio: ['ignore', 'pipe', 'ignore'] });
@@ -91,13 +96,13 @@ export class ClaudeCliConversation {
       'Khi đủ dữ liệu, trả text là bàn giao cuối và toolCalls = []. Không tạo file bằng cách khác.\n' +
       'CÔNG CỤ KHẢ DỤNG\n' + JSON.stringify(o.tools);
     const prompt = o.prompt + '\n\nLỊCH SỬ CÔNG CỤ VÀ PHẢN HỒI\n' + JSON.stringify(this.history);
-    // Without an AE_Team key the CLI reuses Claude Code's own connection: the API/gateway values from
-    // ~/.claude/settings.json (which --restricted would otherwise ignore), else the signed-in Claude account.
-    // --bare accepts only API keys, so this mode drops it; --restricted still ignores the rest of the user/
-    // project settings and removes code-running tools, and --tools '' / --strict-mcp-config keep the CLI isolated.
+    // Without an AE_Team key the CLI connects exactly like the user's own Claude Code: it loads the USER settings
+    // (gateway/API env, apiKeyHelper) and the signed-in account, so whatever makes `claude` work on a machine makes
+    // AE_Team work there too. Project/local settings stay ignored, and --tools '', --strict-mcp-config,
+    // --disable-slash-commands and --permission-prompts none keep the run isolated. --bare (API keys only) is key mode.
     const account = !o.apiKey;
     const connection = account ? await claudeCodeConnection() : {};
-    const args = ['--print', '--output-format', 'json', ...(account ? [] : ['--bare']), '--restricted', '--strict-mcp-config',
+    const args = ['--print', '--output-format', 'json', ...(account ? ['--setting-sources', 'user', '--settings', JSON.stringify({ disableAllHooks: true })] : ['--bare', '--restricted']), '--strict-mcp-config',
       '--tools', '', '--disable-slash-commands', '--permission-prompts', 'none', '--no-session-persistence',
       '--model', o.model, '--effort', 'medium', '--max-turns', '3',
       '--json-schema', JSON.stringify(CLI_SCHEMA), '--system-prompt', o.system + '\n' + bridge];
