@@ -1,3 +1,12 @@
+## 1.1.0
+
+- Vị trí thứ 10 **Học tập** (Claude Opus 5): tự học After Effects animation từ web, YouTube và lịch sử làm việc mỗi lần mở VS Code; thanh tiến trình, Dừng học/Tiếp tục trên bảng điều phối.
+- Kiến thức học được viết thành cách làm từng bước và giao cho đúng kỹ sư (không cho PO); QA và kỹ sư nhận trong task và khi trò chuyện.
+- Kho kiến thức chỉ thêm/sửa, sao lưu hằng ngày (60 bản), không bao giờ bị dọn; đi kèm bộ cài và được gộp vào máy mới.
+- Tự kết nối Claude theo cấu hình Claude Code của từng máy (gateway, API key, tài khoản Claude, apiKeyHelper); không hỏi key. Máy chỉ có Claude chạy được cả đội (vai trò GPT tự dùng Claude Sonnet 5.5).
+- Bộ cài kèm skill tạo ảnh iw-imagegen và cài vào ~/.claude/skills (không kèm key); vị trí Tạo ảnh ưu tiên skill này.
+- Launcher MCP cố định cho Codex, tác vụ dọn ẩn 10 ngày, tự gỡ bản cũ cả khi MCP bị tắt; giữ đường dẫn tiếng Việt khi cài.
+- Sửa: mã model claude-haiku-5.5 sai → claude-haiku-5-5; bộ cài từng đóng gói extension cũ; key không còn bị gửi nhầm tới API chính thức; token luôn được che trong lỗi.
 ## 1.0.1
 
 - Bản phát hành GitHub được đóng trong thư mục tách biệt, loại fixture và dữ liệu máy khỏi VSIX/bộ cài.

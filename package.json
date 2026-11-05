@@ -2,7 +2,7 @@
   "name": "p0-team",
   "displayName": "AE_Team",
   "description": "AE_Team: 9 vai trò tiếng Việt, model Claude/Codex, tạo ảnh iw-imagegen và QA tiếp nhận ý kiến.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "publisher": "inwave-local",
   "license": "MIT",
   "engines": {
@@ -126,7 +126,7 @@
     "watch": "tsc -watch -p .",
     "check": "tsc --noEmit",
     "test": "npm run compile && node --test test/*.test.cjs",
-    "package": "npm run compile && vsce package --no-dependencies --out ae-codexteam-1.0.1.vsix"
+    "package": "npm run compile && vsce package --no-dependencies --out ae-codexteam-1.1.0.vsix"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
