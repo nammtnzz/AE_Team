@@ -109,6 +109,9 @@ try {
     $null=$expected.Add([string]$product.vsix)
     foreach($name in $allowedTools){$null=$expected.Add('tools/'+$name)}
     foreach($name in $allowedNative){$null=$expected.Add('native/'+$name)}
+    # Bundled default image skill: program files only. Gateway keys live in the user's own .env, which never ships.
+    foreach($name in @('SKILL.md','.env.example','agents/openai.yaml','references/prompting.md','references/sample-prompts.md','scripts/image_gen.py')){$null=$expected.Add('skills/iw-imagegen/'+$name)}
+    foreach($relative in $productFiles.Keys){if($relative -match '(^|/).env$'){Add-PrivacyIssue $relative 'credential-file'}}
     foreach($relative in $engineFiles.Keys){
         if ($relative -match '^\.ae-codex/' -and $relative -cnotin $allowedState) { Add-PrivacyIssue ('engine/'+$relative) 'engine-local-state' }
         elseif ($relative -notmatch '^(?:source/[^/]+\.(?:js|json)|tools/[^/]+\.(?:js|ps1|cs)|jsx/AECT Engine\.jsx|AGENTS\.md|\.ae-codex/(?:functions/(?:catalog|capabilities)\.json|(?:library|plugins)/USAGE\.md))$') { Add-PrivacyIssue ('engine/'+$relative) 'unexpected-engine-path' }

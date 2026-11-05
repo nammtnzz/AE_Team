@@ -14,6 +14,8 @@ param(
     [string]$InstallerPath,
     [string]$ResultPath,
     [switch]$SkipTeam,
+    # Claude skills folder for the bundled default image skill (iw-imagegen).
+    [string]$ClaudeSkillsRoot,
     [switch]$Fixture
 )
 Set-StrictMode -Version Latest
@@ -25,6 +27,32 @@ $packageRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $utf8 = [Text.UTF8Encoding]::new($false)
 $engineInstalled = $false
 $teamLock = $null
+# Installs the bundled default image skill. Program files are refreshed (changed ones backed up first);
+# the user's .env with gateway keys is never read, replaced or shipped; a missing .env starts from .env.example.
+function Install-TeamSkill([string]$SkillsRoot) {
+    $source = Join-Path $packageRoot 'skills/iw-imagegen'
+    if (-not (Test-Path -LiteralPath $source -PathType Container)) { return [ordered]@{state='not-bundled'} }
+    $target = Join-Path $SkillsRoot 'iw-imagegen'
+    Assert-TeamPlainPath $target
+    $backup = Join-Path $target ('.ae-team-backup-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))
+    $updated = 0; $backedUp = 0
+    foreach ($file in Get-ChildItem -LiteralPath $source -Recurse -File -Force) {
+        $relative = [IO.Path]::GetRelativePath($source, $file.FullName)
+        if ($relative -ieq '.env') { continue }
+        $destination = Join-Path $target $relative
+        if ([IO.File]::Exists($destination)) {
+            if ((Get-FileHash -LiteralPath $destination).Hash -eq (Get-FileHash -LiteralPath $file.FullName).Hash) { continue }
+            $saved = Join-Path $backup $relative; [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($saved)) | Out-Null
+            [IO.File]::Copy($destination, $saved, $true); $backedUp++
+        }
+        [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        [IO.File]::Copy($file.FullName, $destination, $true); $updated++
+    }
+    $envPath = Join-Path $target '.env'
+    $envCreated = -not [IO.File]::Exists($envPath)
+    if ($envCreated) { [IO.File]::Copy((Join-Path $target '.env.example'), $envPath, $false) }
+    return [ordered]@{state='installed';path=$target;updated=$updated;backedUp=$backedUp;envCreated=$envCreated;needsKey=$envCreated}
+}
 function Copy-TeamInventory([string]$From,[string]$To) {
     if (-not $From -or $From -ieq $To -or -not (Test-Path -LiteralPath $From)) { return }
     Assert-TeamIdle $From
@@ -136,6 +164,8 @@ try {
         if ($LASTEXITCODE -ne 0 -or @($extensions) -notcontains ('inwave-local.p0-team@' + $product.version)) { throw 'Chưa xác minh được phiên bản extension; giữ nguyên các bản engine cũ.' }
         $teamState = 'installed'
     }
+    if (-not $ClaudeSkillsRoot) { $ClaudeSkillsRoot = if ($Fixture) { Join-Path $InstallRoot 'fixture-claude-skills' } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.claude/skills' } }
+    $skill = Install-TeamSkill $ClaudeSkillsRoot
     if (-not $Fixture) {
         if ($SkipTeam) { $teamState = 'skipped-user-choice' }
         if ($InstallerPath) {
@@ -229,7 +259,7 @@ try {
             $backend | Add-Member -NotePropertyName warnings -NotePropertyValue (@($backend.warnings) + ('Chưa cài plugin native: ' + $_.Exception.Message)) -Force
         }
     }
-    $result = [ordered]@{schema='ae-codexteam-install/v1';state='success';version=$product.version;engineVersion=$backend.version;runtimeRoot=$backend.runtimeRoot;toolCount=$backend.toolCount;teamState=$teamState;cleanup=$cleanup;legacy=$legacyResult;native=$nativeResult;reloadRequired=$true;warnings=$backend.warnings;message='Đã cài AE_CodexTeam. Tải lại cửa sổ VS Code và MCP Codex; trong AE mở Window > AE_CodexTeam Bridge (khởi động lại AE nếu chưa thấy). Bấm Kiểm tra kết nối để xác nhận heartbeat mới.'}
+    $result = [ordered]@{schema='ae-codexteam-install/v1';state='success';imageSkill=$skill;version=$product.version;engineVersion=$backend.version;runtimeRoot=$backend.runtimeRoot;toolCount=$backend.toolCount;teamState=$teamState;cleanup=$cleanup;legacy=$legacyResult;native=$nativeResult;reloadRequired=$true;warnings=$backend.warnings;message='Đã cài AE_CodexTeam. Tải lại cửa sổ VS Code và MCP Codex; trong AE mở Window > AE_CodexTeam Bridge (khởi động lại AE nếu chưa thấy). Bấm Kiểm tra kết nối để xác nhận heartbeat mới.'}
 } catch {
     $result = [ordered]@{schema='ae-codexteam-install/v1';state='error';engineInstalled=$engineInstalled;error=$_.Exception.Message;message='Không tự chạy lại tác vụ AE. Nếu engine đã cài, sửa bằng cùng bộ cài; bản cũ và dữ liệu vẫn được giữ.'}
 }

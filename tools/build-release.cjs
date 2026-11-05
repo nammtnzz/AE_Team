@@ -31,6 +31,10 @@ function build(){
   // Native AEGP bridge: built .aex + its installer, run by Install-AeCodexTeam.ps1.
   const aex=path.join(root,'native/out/AE_CodexTeam_Native.aex');if(!fs.existsSync(aex))throw Error('Build native first: native\build.cmd');
   fs.mkdirSync(path.join(payload,'native'));fs.copyFileSync(aex,path.join(payload,'native/AE_CodexTeam_Native.aex'));fs.copyFileSync(path.join(root,'native/Install-NativePlugin.ps1'),path.join(payload,'native/Install-NativePlugin.ps1'));
+  // Default image skill installed into the user's Claude skills folder. Allowlist only: .env (keys) never ships.
+  const skillFiles=['SKILL.md','.env.example','agents/openai.yaml','references/prompting.md','references/sample-prompts.md','scripts/image_gen.py'];
+  for(const rel of skillFiles){const dest=path.join(payload,'skills/iw-imagegen',rel);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(root,'skills/iw-imagegen',rel),dest);}
+  if(fs.existsSync(path.join(payload,'skills/iw-imagegen/.env')))throw Error('Refusing to ship skill credentials (.env)');
   const product={schema:'ae-codexteam-package/v1',product:'AE_CodexTeam',version,engineVersion,vsix,toolCount,additionalTools:['aect_library_search'],signed:false,files:walk(payload).map(rel=>fileEntry(payload,rel))};
   fs.writeFileSync(path.join(payload,'product.json'),JSON.stringify(product,null,2));
   console.log(JSON.stringify({stage,payload,version,engineVersion,files:product.files.length,packageId:id}));return{stage,payload};

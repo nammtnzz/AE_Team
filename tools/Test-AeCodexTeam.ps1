@@ -41,8 +41,17 @@ try {
         $loaderTarget = $literal | ConvertFrom-Json
         Check ($loaderTarget -ceq (Join-Path $first.runtimeRoot 'jsx/AECT Engine.jsx').Replace('\','/') -and (Test-Path -LiteralPath $loaderTarget)) 'AE loader resolves the installed bundle without native backslash escapes'
     }
+    # Default image skill: installed into a sandboxed Claude skills folder in fixture mode, never with keys.
+    $skillDir = Join-Path $install 'fixture-claude-skills/iw-imagegen'
+    Check ($first.imageSkill.state -eq 'installed' -and $first.imageSkill.needsKey -and (Test-Path -LiteralPath (Join-Path $skillDir 'scripts/image_gen.py'))) 'iw-imagegen skill installs with the package'
+    Check (-not (Select-String -LiteralPath (Join-Path $skillDir '.env') -Pattern '^OPENAI_API_KEY=.+' -Quiet)) 'a new .env starts empty from .env.example; no key ships'
+    Check (-not (Select-String -LiteralPath (Join-Path $skillDir 'SKILL.md') -Pattern 'QuanNH|nguye' -Quiet)) 'skill paths are per-user, not tied to one machine'
+    [IO.File]::WriteAllText((Join-Path $skillDir '.env'), "OPENAI_API_KEY=user-fixture-key`n")
+    [IO.File]::WriteAllText((Join-Path $skillDir 'SKILL.md'), 'user edit')
     $again=Install-Fixture $PayloadRoot
     Check ($again.state -eq 'success' -and $again.runtimeRoot -eq $first.runtimeRoot) 'repair is idempotent'
+    Check ([IO.File]::ReadAllText((Join-Path $skillDir '.env')) -match 'user-fixture-key') 'reinstall never replaces the user''s .env'
+    Check ($again.imageSkill.backedUp -eq 1 -and @(Get-ChildItem -LiteralPath $skillDir -Directory -Filter '.ae-team-backup-*').Count -eq 1) 'a locally changed skill file is backed up before refresh'
     $skipText=& $pwsh -NoProfile -File (Join-Path $PayloadRoot 'tools/Install-AeCodexTeam.ps1') -InstallRoot $install -AppDataRoot $appData -VersionFolder '26.5' -Fixture -SkipTeam
     $skip=($skipText -join "`n") | ConvertFrom-Json
     $skipMeta=Read-TeamJson (Join-Path $install 'installation.json')

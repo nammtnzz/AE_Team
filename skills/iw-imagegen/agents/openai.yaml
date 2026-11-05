@@ -1,0 +1,3 @@
+interface:
+  display_name: "IW ImageGen"
+  short_description: "Generate images through a configurable API."

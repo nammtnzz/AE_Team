@@ -35,3 +35,6 @@ fixture/**
 .git/**
 PRIVACY.md
 .gitattributes
+# Installer output and the bundled skill ship in the Setup payload, never inside the VSIX.
+release/**
+skills/**
