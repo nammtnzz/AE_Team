@@ -100,7 +100,9 @@ export class ClaudeCliConversation {
     // (gateway/API env, apiKeyHelper) and the signed-in account, so whatever makes `claude` work on a machine makes
     // AE_Team work there too. Project/local settings stay ignored, and --tools '', --strict-mcp-config,
     // --disable-slash-commands and --permission-prompts none keep the run isolated. --bare (API keys only) is key mode.
-    const account = !o.apiKey;
+    // A saved key is only used together with an Anthropic Base URL; a key with no Claude endpoint (e.g. one saved
+    // for the OpenAI gateway) must not be sent to the official API, so Claude Code's own connection is used instead.
+    const account = !o.apiKey || !o.baseUrl.trim();
     const connection = account ? await claudeCodeConnection() : {};
     const args = ['--print', '--output-format', 'json', ...(account ? ['--setting-sources', 'user', '--settings', JSON.stringify({ disableAllHooks: true })] : ['--bare', '--restricted']), '--strict-mcp-config',
       '--tools', '', '--disable-slash-commands', '--permission-prompts', 'none', '--no-session-persistence',

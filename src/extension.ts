@@ -595,7 +595,8 @@ export class Board {
   /** API key when saved; otherwise 'account' when Claude Code is signed in to a Claude account; else ''. */
   private async learningAuth(): Promise<string> {
     const key = await this.context.secrets.get('gatewayKey') || process.env.ANTHROPIC_API_KEY || '';
-    if (key) return key;
+    // A saved key needs a Claude endpoint; without an Anthropic Base URL, Claude Code's own connection is used.
+    if (key && this.config.anthropicBaseUrl.trim()) return key;
     try { return await claudeAccountReady(await findClaude(vscode.workspace.getConfiguration('aeTeam').get<string>('claudePath', ''))) ? 'account' : ''; }
     catch { return ''; }
   }

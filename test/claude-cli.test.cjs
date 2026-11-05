@@ -101,3 +101,10 @@ test('a Claude Code apiKeyHelper counts as connected', async () => {
   try { assert.equal(await loadWithFakeSpawn('{"loggedIn":false}').api.claudeAccountReady('claude.exe'), true); }
   finally { fs.rmSync(path.join(claudeHome, '.claude'), { recursive: true, force: true }); }
 });
+
+test('a saved key without an Anthropic Base URL is never sent to the official API', async () => {
+  const { api, launches } = loadWithFakeSpawn(answer);
+  await new api.ClaudeCliConversation({ ...options('gateway-key-for-openai'), baseUrl: '' }).turn();
+  assert.ok(!launches[0].args.includes('--bare') && launches[0].args.includes('--setting-sources'), 'uses Claude Code\'s own connection');
+  assert.equal(launches[0].env.ANTHROPIC_API_KEY, undefined);
+});
