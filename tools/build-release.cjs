@@ -19,7 +19,9 @@ function build(){
   }
   const engineRoot=path.join(payload,'engine'),files=walk(engineRoot).map(rel=>fileEntry(engineRoot,rel));
   const catalog=JSON.parse(fs.readFileSync(path.join(engineRoot,'.ae-codex/functions/catalog.json'))),toolCount=catalog.functions.length;
-  const engineVersion='1.0.0',id=engineVersion+'-'+sha(JSON.stringify(files)).slice(0,12);
+  // One version number everywhere: the engine/panel version is the product version.
+  if(catalog.bridgeVersion!==version)throw Error('Engine bridge version '+catalog.bridgeVersion+' differs from AE_Team '+version+'; update engine/source/bridge.js and rebuild the engine bundle');
+  const engineVersion=version,id=engineVersion+'-'+sha(JSON.stringify(files)).slice(0,12);
   const metadata={...original,version:engineVersion,bridgeVersion:catalog.bridgeVersion,toolCount,packageId:id,additionalTools:['aect_library_search'],files};
   // Legacy README/command assets are not part of this sanitized engine package.
   delete metadata.readmeSha256;delete metadata.commandSha256;

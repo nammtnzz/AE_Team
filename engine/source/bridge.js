@@ -17,7 +17,7 @@
         thisObject = $.global.__AECT_PANEL_HOST__;
     }
     var GLOBAL_NAME = "__aeCodexTeamBridgeV1";
-    var BRIDGE_VERSION = "1.0.0";
+    var BRIDGE_VERSION = "1.1.4";
     function workspaceRoot() {
         var configured = $.global.__AECT_WORKSPACE_ROOT__, script;
         if (typeof configured === "string" && configured.replace(/^\s+|\s+$/g, "")) {

@@ -1,6 +1,6 @@
 #target aftereffects
 #targetengine "aeCodexTeamBridge"
-// AECT_BUNDLE_V2	f3ac1f6b8dbf77ef3b1847699411c58f3257b5209f1467d56d307252dd8cda24	314768	269283	76	3649048789	1
+// AECT_BUNDLE_V2	48294cad07c29382e5af52c85a290a557eee0cf16a172e02abe7b8ac8c80ffe0	314768	269283	76	3649048789	1
 /* ES3 runtime. Branch bodies remain inert in the indexed comment at EOF. */
 (function () {
     function workspaceRoot() {
@@ -1793,7 +1793,7 @@
         thisObject = $.global.__AECT_PANEL_HOST__;
     }
     var GLOBAL_NAME = "__aeCodexTeamBridgeV1";
-    var BRIDGE_VERSION = "1.0.0";
+    var BRIDGE_VERSION = "1.1.4";
     function workspaceRoot() {
         var configured = $.global.__AECT_WORKSPACE_ROOT__, script;
         if (typeof configured === "string" && configured.replace(/^\s+|\s+$/g, "")) {

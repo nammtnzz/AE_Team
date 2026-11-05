@@ -1,3 +1,6 @@
+## 1.1.4
+
+- Engine và panel AE dùng chung số phiên bản với AE_Team (panel hiện "Bridge 1.1.4" thay vì 1.0.0). Bản build dừng nếu hai số lệch nhau.
 ## 1.1.3
 
 - Sửa lỗi cài đặt "Index was outside the bounds of the array" của 1.1.1–1.1.2 trên máy không có thư mục cài cũ (AE_CodexTeam/CodexAE). Bộ test cài đặt giờ chạy cả nhánh dò tìm thư mục cũ.

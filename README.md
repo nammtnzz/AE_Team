@@ -1,10 +1,10 @@
-# AE_Team 1.1.3
+# AE_Team 1.1.4
 
 Ứng dụng quản lý Windows riêng và Team Studio trong VS Code. Gồm Office 3D, Bảng việc, Kết quả, Timeline, Luồng việc, Thống kê và tab After Effects. Không dùng mã hoặc thành phần của Mister Horse.
 
 ## Cài đặt và cập nhật thủ công
 
-Mở AE_CodexTeam-Setup-1.1.3.exe → Cài đặt / Sửa chữa. EXE chứa engine, panel AE, plugin native và extension 1.1.3; không cần giải nén ZIP. Trình quản lý một màn hình, phần hướng dẫn và log nằm trong “Chi tiết & chẩn đoán”. Chương trình chạy bằng .NET Framework của Windows, không mở giao diện bằng PowerShell. Có thể mở trình quản lý khi AE tắt.
+Mở AE_CodexTeam-Setup-1.1.4.exe → Cài đặt / Sửa chữa. EXE chứa engine, panel AE, plugin native và extension 1.1.4; không cần giải nén ZIP. Trình quản lý một màn hình, phần hướng dẫn và log nằm trong “Chi tiết & chẩn đoán”. Chương trình chạy bằng .NET Framework của Windows, không mở giao diện bằng PowerShell. Có thể mở trình quản lý khi AE tắt.
 
 Engine cần Node.js 20+, PowerShell 7 và AE đã cài/mở ít nhất một lần. VS Code chỉ bắt buộc nếu chọn cài Team Studio. Có thể bỏ chọn extension để cài riêng engine/panel. Bộ cài kiểm tra phụ thuộc, chưa tự tải prerequisite. Không cần quyền admin, không cài vào thư mục Mister Horse.
 

@@ -1,7 +1,7 @@
 {
   "schema": "aect-functions-catalog/v1",
-  "bridgeVersion": "1.0.0",
-  "revision": "f3ac1f6b8dbf77ef3b1847699411c58f3257b5209f1467d56d307252dd8cda24",
+  "bridgeVersion": "1.1.4",
+  "revision": "48294cad07c29382e5af52c85a290a557eee0cf16a172e02abe7b8ac8c80ffe0",
   "functions": [
     {
       "name": "team.system.info",
