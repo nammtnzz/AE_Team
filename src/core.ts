@@ -52,7 +52,7 @@ export interface Session {
   chatUsage?: { calls: number; inputTokens: number; outputTokens: number };
 }
 
-export const COMMON = 'Bạn là thành viên AE_CodexTeam sản xuất Adobe After Effects. Trả lời tiếng Việt. ' +
+export const COMMON = 'Bạn là thành viên AE_Team sản xuất Adobe After Effects. Trả lời tiếng Việt. ' +
   'Chỉ PO dùng delegate_task để giao việc cho kỹ sư và nhận kết quả thật. Không chỉ viết trong câu trả lời rằng đã giao việc. ' +
   'Kỹ sư làm ngay trong lượt của PO (song song khi việc độc lập), dùng model của vai trò mình; tối đa một cấp subagent. Kết quả kỹ sư là bàn giao cho PO, chưa phải CEO duyệt. ' +
   'AE_Codex là engine duy nhất. Trước khi lập plan: aect_find, aect_schema rồi aect_propose_plan. Chỉ dùng function đã cài và JSON plan, không tạo JSX riêng hay arbitrary eval. ' +
@@ -71,7 +71,7 @@ export function defaultConfig(): TeamConfig {
   const make = (id: string, name: string, shortName: string, color: string, model: string, protocol: Protocol, systemPrompt: string): Role =>
     ({ id, name, shortName, color, model, protocol, systemPrompt });
   return {
-    version: 1, name: 'AE_CodexTeam', openaiBaseUrl: '', anthropicBaseUrl: '',
+    version: 1, name: 'AE_Team', openaiBaseUrl: '', anthropicBaseUrl: '',
     maxParallel: 3, maxOutputTokens: 4096, budget: { maxCalls: 0, maxTokens: 0 }, prices: {},
     roles: [
       make('lead', 'PO · Điều phối', 'Nhận việc từ CEO', '#b187ff', 'claude-opus-5-5', 'claude-cli',
@@ -162,7 +162,7 @@ export function upgradeConfig(value: unknown): TeamConfig {
   if (!/Unity|Level Production/i.test(old.name)) {
     const defaults = defaultConfig();
     const priorNames = ["Điều phối","Technical Director","Animation","Layout / Camera","Compositing / FX","Art director","Render / QA"];
-    return { ...old, name: old.name === 'After Effects Production' ? 'AE_CodexTeam' : old.name,
+    return { ...old, name: ['After Effects Production', 'AE_CodexTeam'].includes(old.name) ? 'AE_Team' : old.name,
       roles: old.roles.map(role => { const index = defaults.roles.findIndex(r => r.id === role.id); const preset = defaults.roles[index];
         if (role.id === 'art' && ['Chỉ đạo mỹ thuật', 'Art director'].includes(role.name)) return { ...role, name: preset.name, shortName: preset.shortName, systemPrompt: preset.systemPrompt };
         return priorNames.includes(role.name) ? { ...role, name: preset.name, shortName: preset.shortName,

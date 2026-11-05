@@ -1,7 +1,7 @@
 {
   "name": "p0-team",
-  "displayName": "AE_CodexTeam",
-  "description": "AE_CodexTeam: 9 vai trò tiếng Việt, model Claude/Codex, tạo ảnh iw-imagegen và QA tiếp nhận ý kiến.",
+  "displayName": "AE_Team",
+  "description": "AE_Team: 9 vai trò tiếng Việt, model Claude/Codex, tạo ảnh iw-imagegen và QA tiếp nhận ý kiến.",
   "version": "1.0.1",
   "publisher": "inwave-local",
   "license": "MIT",
@@ -25,20 +25,20 @@
     "commands": [
       {
         "command": "aeTeam.open",
-        "title": "AE_CodexTeam: Mở bảng điều phối",
+        "title": "AE_Team: Mở bảng điều phối",
         "icon": "$(organization)"
       },
       {
         "command": "aeTeam.configure",
-        "title": "AE_CodexTeam: Cấu hình gateway & model"
+        "title": "AE_Team: Cấu hình gateway & model"
       },
       {
         "command": "aeTeam.setApiKey",
-        "title": "AE_CodexTeam: Lưu API key"
+        "title": "AE_Team: Lưu API key"
       },
       {
         "command": "aeTeam.afterEffects",
-        "title": "AE_CodexTeam: Công cụ After Effects",
+        "title": "AE_Team: Công cụ After Effects",
         "icon": "$(tools)"
       }
     ],
@@ -46,7 +46,7 @@
       "activitybar": [
         {
           "id": "aeTeam",
-          "title": "AE_CodexTeam",
+          "title": "AE_Team",
           "icon": "media/team.svg"
         }
       ]
@@ -60,7 +60,7 @@
       ]
     },
     "configuration": {
-      "title": "AE_CodexTeam",
+      "title": "AE_Team",
       "properties": {
         "aeTeam.autoOpen": {
           "type": "boolean",
@@ -89,7 +89,7 @@
           "type": "string",
           "scope": "machine",
           "default": "",
-          "description": "Engine AE_CodexTeam. Để trống để tự tìm bản đã cài, engine tích hợp trong AE_CodexTeam."
+          "description": "Engine AE_Team. Để trống để tự tìm bản đã cài, engine tích hợp trong AE_Team."
         },
         "aeTeam.nodePath": {
           "type": "string",

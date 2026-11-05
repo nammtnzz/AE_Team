@@ -374,7 +374,7 @@
     if (connected && status.connection.checkedAtEpochMs) connectionExpiry = setTimeout(renderAe, Math.max(1, 15001 - status.connection.ageMs - (Date.now() - status.connection.checkedAtEpochMs)));
     $('aeConnection').textContent = label;
     $('aeStripStatus').textContent = label + (status ? ' · ' + status.activeTools + ' công cụ' : '');
-    $('aeEnginePath').textContent = ae.root || 'Tự tìm engine AE_CodexTeam tích hợp';
+    $('aeEnginePath').textContent = ae.root || 'Tự tìm engine AE_Team tích hợp';
     $('aeHold').hidden = !ae.hold;
     $('aeProject').disabled = ae.busy || ae.hold || !connected;
     $('aePickEngine').disabled = ae.busy || ae.hold;

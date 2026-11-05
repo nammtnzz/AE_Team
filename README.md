@@ -1,4 +1,4 @@
-# AE_CodexTeam 1.0.1
+# AE_Team 1.0.1
 
 Ứng dụng quản lý Windows riêng và Team Studio trong VS Code. Gồm Office 3D, Bảng việc, Kết quả, Timeline, Luồng việc, Thống kê và tab After Effects. Không dùng mã hoặc thành phần của Mister Horse.
 
@@ -127,7 +127,7 @@ EXE hỗ trợ --check (xác minh payload) và --smoke-test (mở/đóng form, k
 
 ## Nguồn tích hợp
 
-Mã nguồn cần thiết của AE_Codex và AE_Team nằm trong thư mục sources/AE_Codex và sources/AE_Team. Runtime sử dụng engine nội bộ tại thư mục engine và không phụ thuộc hai thư mục cũ trong hồ sơ người dùng.
+Mã nguồn cũ của AE_Team nằm trong thư mục sources/AE_Team. AE_Codex là project riêng, có repo riêng (nammtnzz/AE_Codex), không còn bản sao trong AE_Team. Runtime sử dụng engine nội bộ tại thư mục engine (server MCP `ae_codexteam`, tool `aect_*`) và không phụ thuộc AE_Codex; hộp công cụ tự loại server `ae_functions` của AE_Codex để hai bên không dùng lẫn.
 
 
 
