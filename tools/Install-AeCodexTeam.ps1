@@ -195,13 +195,20 @@ try {
     if (-not $Fixture) {
         if ($SkipTeam) { $teamState = 'skipped-user-choice' }
         if ($InstallerPath) {
-            $appPath = Join-Path $InstallRoot 'AE_CodexTeam.exe'; Assert-TeamPlainPath $appPath
+            $appPath = Join-Path $InstallRoot 'AE_Team.exe'; Assert-TeamPlainPath $appPath
             if ([IO.Path]::GetFullPath($InstallerPath) -ine $appPath) {
                 try { [IO.File]::Copy($InstallerPath,$appPath,$true) }
                 catch { [Console]::Error.WriteLine('Launcher đang được mở. Engine và extension đã cập nhật; đóng launcher rồi mở bộ cài mới để sửa launcher.') }
             }
             $shell = New-Object -ComObject WScript.Shell
-            $shortcutPath = Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'AE_CodexTeam.lnk'
+            $desktop = [Environment]::GetFolderPath('DesktopDirectory')
+            # The old AE_CodexTeam shortcut is removed when it points at a missing launcher or an older install folder.
+            $oldShortcut = Join-Path $desktop 'AE_CodexTeam.lnk'
+            if ([IO.File]::Exists($oldShortcut)) {
+                $oldTarget = $shell.CreateShortcut($oldShortcut).TargetPath
+                if (-not $oldTarget -or -not [IO.File]::Exists($oldTarget) -or -not (Test-TeamChild $oldTarget $InstallRoot)) { [IO.File]::Delete($oldShortcut) }
+            }
+            $shortcutPath = Join-Path $desktop 'AE_Team.lnk'
             $shortcut = $shell.CreateShortcut($shortcutPath); $shortcut.TargetPath=$appPath; $shortcut.WorkingDirectory=$InstallRoot; $shortcut.Save()
         }
     }

@@ -1,3 +1,7 @@
+## 1.1.2
+
+- Trình quản lý cài đặt đổi tên thành AE_Team.exe và lối tắt Desktop AE_Team.lnk, đặt trong thư mục cài AE_Team.
+- Lối tắt AE_CodexTeam.lnk cũ bị xóa khi nó trỏ vào file không còn tồn tại hoặc thư mục cài cũ.
 ## 1.1.1
 
 - Thư mục cài đổi thành %LOCALAPPDATA%AE_Team. Bản cài AE_CodexTeam cũ được chuyển tự động: gỡ loader/MCP cũ an toàn, chép inventory và kho kiến thức sang chỗ mới; thư mục cũ giữ làm dự phòng.
