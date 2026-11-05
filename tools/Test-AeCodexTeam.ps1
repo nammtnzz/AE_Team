@@ -7,7 +7,7 @@ $checks=0
 function Check([bool]$Value,[string]$Message){if(-not $Value){throw "FAILED: $Message"};$script:checks++}
 $pwsh=(Get-Process -Id $PID).Path
 function Install-Fixture([string]$Package) {
-    $text=& $pwsh -NoProfile -File (Join-Path $Package 'tools/Install-AeCodexTeam.ps1') -InstallRoot $install -AppDataRoot $appData -VersionFolder '26.5' -Fixture
+    $text=& $pwsh -NoProfile -File (Join-Path $Package 'tools/Install-AeCodexTeam.ps1') -InstallRoot $install -AppDataRoot $appData -VersionFolder '26.5' -Fixture -LegacySearchRoot (Join-Path $sandbox 'no-legacy')
     return ($text -join "`n") | ConvertFrom-Json
 }
 function Old-Version([string]$Id,[switch]$Modified) {

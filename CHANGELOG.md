@@ -1,3 +1,6 @@
+## 1.1.3
+
+- Sửa lỗi cài đặt "Index was outside the bounds of the array" của 1.1.1–1.1.2 trên máy không có thư mục cài cũ (AE_CodexTeam/CodexAE). Bộ test cài đặt giờ chạy cả nhánh dò tìm thư mục cũ.
 ## 1.1.2
 
 - Trình quản lý cài đặt đổi tên thành AE_Team.exe và lối tắt Desktop AE_Team.lnk, đặt trong thư mục cài AE_Team.

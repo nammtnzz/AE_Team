@@ -16,6 +16,8 @@ param(
     [switch]$SkipTeam,
     # Claude skills folder for the bundled default image skill (iw-imagegen).
     [string]$ClaudeSkillsRoot,
+    # Where older install folders (AE_CodexTeam, CodexAE) are looked for; tests point it at a sandbox.
+    [string]$LegacySearchRoot = $env:LOCALAPPDATA,
     [switch]$Fixture
 )
 Set-StrictMode -Version Latest
@@ -104,8 +106,9 @@ try {
     }
     $legacyInstall = $null
     # Older install folders, newest name first: AE_CodexTeam (until 1.1.0), then CodexAE (early builds).
-    $legacyCandidate = if ($LegacyInstallRoot) { [IO.Path]::GetFullPath($LegacyInstallRoot) } elseif (-not $Fixture) {
-        @('AE_CodexTeam','CodexAE' | ForEach-Object { Join-Path $env:LOCALAPPDATA $_ } | Where-Object { $_ -ine $InstallRoot -and (Test-Path -LiteralPath (Join-Path $_ 'installation.json') -PathType Leaf) })[0]
+    $legacyCandidate = if ($LegacyInstallRoot) { [IO.Path]::GetFullPath($LegacyInstallRoot) } elseif (-not $Fixture -or $PSBoundParameters.ContainsKey('LegacySearchRoot')) {
+        # Select-Object (not [0]): no older folder must mean $null, not an out-of-range error under StrictMode.
+        ('AE_CodexTeam','CodexAE' | ForEach-Object { Join-Path $LegacySearchRoot $_ } | Where-Object { $_ -ine $InstallRoot -and (Test-Path -LiteralPath (Join-Path $_ 'installation.json') -PathType Leaf) } | Select-Object -First 1)
     } else { $null }
     if ($legacyCandidate -and $legacyCandidate -ine $InstallRoot -and (Test-Path -LiteralPath (Join-Path $legacyCandidate 'installation.json') -PathType Leaf)) {
         $legacyMeta = Read-TeamJson (Join-Path $legacyCandidate 'installation.json')
