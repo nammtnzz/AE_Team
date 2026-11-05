@@ -37,6 +37,10 @@
         "title": "AE_Team: Lưu API key"
       },
       {
+        "command": "aeTeam.connectClaude",
+        "title": "AE_Team: Kết nối Claude (gateway)"
+      },
+      {
         "command": "aeTeam.afterEffects",
         "title": "AE_Team: Công cụ After Effects",
         "icon": "$(tools)"

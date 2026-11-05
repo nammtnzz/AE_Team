@@ -16,7 +16,7 @@ async function waitFor(predicate, message) {
 }
 async function setup(t, fetcher, settings = {}, cli, dependencies = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'p0-runner-test-'));
-  const storage = new Map(); const globalStore = new Map(); const secrets = new Map([['gatewayKey', 'mock-api-key']]);
+  const inputs = []; const storage = new Map(); const globalStore = new Map(); const secrets = new Map([['gatewayKey', 'mock-api-key']]);
   // Learned knowledge of a test never touches the real per-user store.
   process.env.AECT_KNOWLEDGE_DIR = path.join(root, 'knowledge');
   const fakeVscode = {
@@ -25,7 +25,7 @@ async function setup(t, fetcher, settings = {}, cli, dependencies = {}) {
       getConfiguration: () => ({ get: (key, fallback) => settings[key] ?? fallback })
     },
     commands: { executeCommand: async () => {} }, Uri: { file: fsPath => ({ fsPath }) },
-    window: { createOutputChannel: () => ({ appendLine() {}, dispose() {} }) }
+    window: { createOutputChannel: () => ({ appendLine() {}, dispose() {} }), showInputBox: async () => inputs.shift(), showInformationMessage: async () => undefined }
   };
   const location = require.resolve('../dist/extension');
   const source = await fs.readFile(location, 'utf8');
@@ -50,7 +50,7 @@ async function setup(t, fetcher, settings = {}, cli, dependencies = {}) {
   });
   board.config = { ...defaultConfig(), openaiBaseUrl: 'https://mock.invalid/v1', anthropicBaseUrl: 'https://mock.invalid/v1',
     maxParallel: 2, roles: defaultConfig().roles.map(r => ({ ...r, protocol: 'responses' })) };
-  return { board, root, storage, global: globalStore, secrets, context, Board: extensionModule.exports.Board };
+  return { board, root, storage, global: globalStore, secrets, inputs, context, Board: extensionModule.exports.Board };
 }
 const done = () => Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: 'Verified handoff, no file changes.' }] }],
   usage: { input_tokens: 10, output_tokens: 5 } });
@@ -903,5 +903,26 @@ test('without an API key, learning runs on the Claude account signed in to Claud
     assert.equal(learningCli.options.model, 'claude-opus-5');
     await waitFor(() => board.learningStatus?.state === 'done', 'account-mode learning finishes');
     assert.equal(board.learningStatus.lessonsSaved, 1);
+  } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
+});
+
+test('never prompts for a connection; the manual Kết nối Claude command still works', async t => {
+  const cli = learningCli([{ calls: [{ id: 'a', name: 'save_lesson', arguments: { title: 'Wiggle', lesson: '1. wiggle(2, 30) cho rung nhẹ', kind: 'tip', roles: ['gameplay'] } }] }], false);
+  const { board, secrets, inputs } = await setup(t, async () => done(), {}, cli);
+  await board.initialize();
+  secrets.delete('gatewayKey'); const saved = process.env.ANTHROPIC_API_KEY; delete process.env.ANTHROPIC_API_KEY;
+  try {
+    inputs.push('https://should-not-be-asked/', 'nope');
+    assert.equal(await board.maybeAutoLearn(), 'no-auth');
+    await assert.rejects(board.handle({ type: 'learnStart', topic: '' }), /Chưa có cách gọi Claude/);
+    assert.equal(inputs.length, 2, 'no input box was opened'); inputs.length = 0;
+    // The fixture puts every role on responses; restore the two protocol-bound seats so the config validates.
+    board.config.roles.find(r => r.id === 'image').protocol = 'iw-imagegen'; board.config.roles.find(r => r.id === 'learn').protocol = 'claude-cli';
+    inputs.push('https://gateway.example/', 'manual-token');
+    assert.equal(await board.connectClaude(), true);
+    assert.equal(await secrets.get('gatewayKey'), 'manual-token'); assert.equal(board.config.anthropicBaseUrl, 'https://gateway.example');
+    await board.handle({ type: 'learnStart', topic: '' });
+    assert.equal(learningCli.options.apiKey, 'manual-token');
+    await waitFor(() => board.learningStatus?.state === 'done', 'learning runs after the manual connection');
   } finally { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; }
 });

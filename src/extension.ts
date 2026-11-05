@@ -34,6 +34,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('aeTeam.open', () => board.open()),
     vscode.commands.registerCommand('aeTeam.configure', () => { board.open(); board.send({ type: 'configure' }); }),
     vscode.commands.registerCommand('aeTeam.setApiKey', () => board.setKey()),
+    vscode.commands.registerCommand('aeTeam.connectClaude', () => board.connectClaude()),
     vscode.commands.registerCommand('aeTeam.afterEffects', () => { board.open(); board.send({ type: 'openAe' }); }),
     // Keep old command links working after the in-place extension upgrade.
     vscode.commands.registerCommand('p0Team.open', () => board.open()),
@@ -599,9 +600,28 @@ export class Board {
     catch { return ''; }
   }
 
+  /**
+   * Optional manual connection (command "AE_Team: Kết nối Claude"), never opened automatically: Base URL goes to
+   * the team config, the token to VS Code secret storage on this machine only (never into an installer).
+   */
+  async connectClaude(): Promise<boolean> {
+    const url = await vscode.window.showInputBox({ title: 'AE_Team — Kết nối Claude (1/2): Base URL gateway', ignoreFocusOut: true,
+      value: this.config.anthropicBaseUrl, placeHolder: 'https://<gateway của bạn>/  (để trống = API chính thức của Anthropic)',
+      validateInput: value => !value.trim() || /^https?:\/\/[^\s@?#]+$/i.test(value.trim()) ? undefined : 'URL http(s) không chứa thông tin đăng nhập, query hay #' });
+    if (url === undefined) return false;
+    const token = await vscode.window.showInputBox({ title: 'AE_Team — Kết nối Claude (2/2): API key / token', password: true, ignoreFocusOut: true,
+      placeHolder: 'Dán API key hoặc token của gateway (chỉ lưu trên máy này)' });
+    if (!token?.trim()) return false;
+    await this.writeConfig(validateConfig({ ...this.config, anthropicBaseUrl: url.trim() }));
+    await this.context.secrets.store('gatewayKey', token.trim());
+    await this.update(); this.toast('Đã kết nối Claude cho AE_Team trên máy này.');
+    return true;
+  }
+
   private async startLearning(topic: string, resume: boolean): Promise<void> {
     if (this.learningController) throw new Error('Đang học. Bấm Dừng học trước khi bắt đầu lại.');
     topic = topic.replace(/\s+/g, ' ').trim().slice(0, 200);
+    // Never prompts: Claude Code's own gateway/API settings or the Claude account signed in on this machine are used.
     const auth = await this.learningAuth();
     if (!auth) throw new Error('Chưa có cách gọi Claude: cấu hình API/gateway cho Claude Code (~/.claude/settings.json), lưu API key qua "AE_Team: Lưu API key", hoặc đăng nhập Claude CLI.');
     const key = auth === 'account' ? '' : auth;
